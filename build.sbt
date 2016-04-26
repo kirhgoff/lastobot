@@ -15,7 +15,9 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 libraryDependencies ++= Seq(
     "org.scalatest"   %% "scalatest"    % "2.2.4"   % "test",
     "org.scalacheck"  %% "scalacheck"   % "1.12.5"      % "test",
-    "info.mukel" %% "telegrambot4s" % "1.0.4-SNAPSHOT"
+    "info.mukel" %% "telegrambot4s" % "1.0.4-SNAPSHOT",
+    "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4"
+
 )
 
 // Compiler settings. Use scalac -X for other options and their description.
