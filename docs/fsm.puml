@@ -1,0 +1,15 @@
+@startuml
+
+[*] --> Serving
+State1 --> [*]
+State1 : this is another string
+
+Serving -> Obeying : obey
+
+Serving -> Abusing : command abuse
+Abusing : keyboard "да", "нет"
+Abusing -> Serving : no
+Abusing -> Serving : sent "Манда"
+
+
+@enduml

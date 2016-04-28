@@ -1,7 +1,10 @@
 package org.kirhgoff.lastobot
 
-import akka.actor.Actor
+import akka.actor.{Props, ActorRef, Actor}
+import info.mukel.telegram.bots.TelegramBot
 import info.mukel.telegram.bots.api.Message
+
+import scala.collection.mutable
 
 /**
   * Created by kirilllastovirya on 26/04/2016.
@@ -9,11 +12,27 @@ import info.mukel.telegram.bots.api.Message
   * Class processes requests received from user and converts them
   * into internal bot events, creating bots per sender
   */
-class UserInputProcessor extends Actor{
+class UserInputProcessor(val bot:TelegramBot) extends Actor {
+  val senderMap = mutable.Map[Int, ActorRef]()
   override def receive: Receive = {
-    case CommandReceived(sender, commandName, args) ⇒
-      println(s"Command received: $commandName")
-    case TextReceived(msg:Message) =>
-      println(s"Text receievd: ${msg.text}")
+    case UserCommand(sender, commandName, args) ⇒ commandName match {
+      case "obey" => senderActor (sender) ! Obey
+      case "eat" => senderActor (sender) ! Eat
+      case "abuse" => senderActor (sender) ! Abuse
+      case _ => println("Hmmm")
+    }
+    case UserText(msg:Message) => {
+      senderActor(msg.chat.id) ! BotHearsText(msg.text.toString)
+    }
+    //Receives from bot
+    case Text(sender:Int, text:String) => {
+      bot.sendMessage(sender, text)
+    }
+  }
+
+  def senderActor(senderId: Int): ActorRef = {
+    senderMap.getOrElseUpdate(senderId,
+      context.actorOf(Props(new RobotFSM(senderId)), name = s"Sender$senderId")
+    )
   }
 }

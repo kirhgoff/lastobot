@@ -8,13 +8,16 @@ import info.mukel.telegram.bots.{Commands, Polling, TelegramBot, Utils}
 /**
   * Created by kirilllastovirya on 22/04/2016.
   */
-class LastobotApp(val userInputProcessor: ActorRef) extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovirya/lastobot.token"))
+class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovirya/lastobot.token"))
   with Polling with Commands {
+  val system  = ActorSystem(s"Lastobot")
+  var userInputProcessor = system.actorOf(Props(new UserInputProcessor(this)),
+    name = "userInput")
 
   val states =
     on("obey") { (sender, args) =>
       replyTo(sender) {
-        userInputProcessor ! CommandReceived(sender, "obey", args)
+        userInputProcessor ! UserCommand(sender, "obey", args)
         "Yees, my master!"
       }
     }
@@ -26,7 +29,7 @@ class LastobotApp(val userInputProcessor: ActorRef) extends TelegramBot(Utils.to
       oneTimeKeyboard = true
     )
     sendMessage(sender, "What food may I serve you, my master?", None, None, None, Option(keyboard))
-    userInputProcessor ! CommandReceived(sender, "eat", args)
+    userInputProcessor ! UserCommand(sender, "eat", args)
 
   }
 
@@ -37,17 +40,17 @@ class LastobotApp(val userInputProcessor: ActorRef) extends TelegramBot(Utils.to
       oneTimeKeyboard = true
     )
     sendMessage(sender, "Да?", None, None, None, Option(keyboard))
-    userInputProcessor ! CommandReceived(sender, "abuse", args)
+    userInputProcessor ! UserCommand(sender, "abuse", args)
   }
 
   override def onText(text: String, message: Message): Unit = text match {
     case "да..." => {
       sendMessage(message.chat.id, "Манда")
-      userInputProcessor ! TextReceived(message)
+      userInputProcessor ! UserText(message)
     }
     case _ => {
       super.onText(text, message)
-      userInputProcessor ! TextReceived(message)
+      userInputProcessor ! UserText(message)
     }
   }
 }
@@ -55,9 +58,7 @@ class LastobotApp(val userInputProcessor: ActorRef) extends TelegramBot(Utils.to
 object LastobotApp {
   def main(args: Array[String]): Unit = {
     println("Lastobot starting")
-    val system  = ActorSystem(s"Lastobot")
-    val userInputReceiver = system.actorOf(Props[UserInputProcessor], name = "userInput")
-    new LastobotApp(userInputReceiver).run()
+    new LastobotApp().run()
   }
 }
 
