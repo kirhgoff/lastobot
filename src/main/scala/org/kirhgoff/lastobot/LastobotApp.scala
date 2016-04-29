@@ -14,45 +14,20 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
   var userInputProcessor = system.actorOf(Props(new UserInputProcessor(this)),
     name = "userInput")
 
-  val states =
+  val states = {
+    on("eat") { (sender, args) =>
+      userInputProcessor ! UserCommand(sender, "eat", args)
+    }
     on("obey") { (sender, args) =>
-      replyTo(sender) {
-        userInputProcessor ! UserCommand(sender, "obey", args)
-        "Yees, my master!"
-      }
+      userInputProcessor ! UserCommand(sender, "obey", args)
+    }
+    on("abuse") { (sender, args) =>
+      userInputProcessor ! UserCommand(sender, "abuse", args)
     }
 
-  on("eat") { (sender, args) =>
-    val keyboard: ReplyMarkup = new ReplyKeyboardMarkup(
-      Array(Array("bread", "meat", "vegetables")),
-      resizeKeyboard = true,
-      oneTimeKeyboard = true
-    )
-    sendMessage(sender, "What food may I serve you, my master?", None, None, None, Option(keyboard))
-    userInputProcessor ! UserCommand(sender, "eat", args)
-
   }
-
-  on("abuse") { (sender, args) =>
-    val keyboard: ReplyMarkup = new ReplyKeyboardMarkup(
-      Array(Array("да...", "нет...")),
-      resizeKeyboard = true,
-      oneTimeKeyboard = true
-    )
-    sendMessage(sender, "Да?", None, None, None, Option(keyboard))
-    userInputProcessor ! UserCommand(sender, "abuse", args)
-  }
-
-  override def onText(text: String, message: Message): Unit = text match {
-    case "да..." => {
-      sendMessage(message.chat.id, "Манда")
-      userInputProcessor ! UserText(message)
-    }
-    case _ => {
-      super.onText(text, message)
-      userInputProcessor ! UserText(message)
-    }
-  }
+  override def onText(text: String, message: Message): Unit =
+    userInputProcessor ! UserText(message)
 }
 
 object LastobotApp {

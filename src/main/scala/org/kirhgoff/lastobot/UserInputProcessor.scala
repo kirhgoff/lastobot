@@ -2,7 +2,8 @@ package org.kirhgoff.lastobot
 
 import akka.actor.{Props, ActorRef, Actor}
 import info.mukel.telegram.bots.TelegramBot
-import info.mukel.telegram.bots.api.Message
+import info.mukel.telegram.bots.OptionPimps._
+import info.mukel.telegram.bots.api.{ReplyKeyboardMarkup, ReplyMarkup, Message}
 
 import scala.collection.mutable
 
@@ -19,14 +20,23 @@ class UserInputProcessor(val bot:TelegramBot) extends Actor {
       case "obey" => senderActor (sender) ! Obey
       case "eat" => senderActor (sender) ! Eat
       case "abuse" => senderActor (sender) ! Abuse
-      case _ => println("Hmmm")
+      case _ => senderActor (sender) ! UnknownCommand
     }
     case UserText(msg:Message) => {
       senderActor(msg.chat.id) ! BotHearsText(msg.text.toString)
     }
+
     //Receives from bot
     case Text(sender:Int, text:String) => {
       bot.sendMessage(sender, text)
+    }
+    case Keyboard(sender:Int, text:String, buttons:Array[Array[String]]) => {
+      val keyboard: ReplyMarkup = new ReplyKeyboardMarkup(
+        buttons,
+        resizeKeyboard = true,
+        oneTimeKeyboard = true
+      )
+      bot.sendMessage(sender, text, None, None, None, Option(keyboard))
     }
   }
 
