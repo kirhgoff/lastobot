@@ -52,7 +52,7 @@ class RobotFSM(val senderId: Int) extends FSM[State, Data] {
       println("Received Eat")
       goto(ChoosingFood)
     }
-    case Event(Abuse, Uninitialized) => {
+    case Event(Abuse, _) => {
       println("Received Abuse")
       goto(Abusing)
     }

@@ -23,7 +23,7 @@ class UserInputProcessor(val bot:TelegramBot) extends Actor {
       case _ => senderActor (sender) ! UnknownCommand
     }
     case UserText(msg:Message) => {
-      senderActor(msg.chat.id) ! BotHearsText(msg.text.toString)
+      senderActor(msg.chat.id) ! BotHearsText(msg.text.getOrElse("blah"))
     }
 
     //Receives from bot

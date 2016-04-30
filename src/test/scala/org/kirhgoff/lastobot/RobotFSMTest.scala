@@ -34,6 +34,10 @@ class RobotFSMTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 
       bot ! BotHearsText("да")
       expectMsg(Text(1, "Манда!"))
+      bot.stateName should be(Serving)
+
+      bot ! Abuse
+      bot.stateName should be(Abusing)
     }
   }
 
