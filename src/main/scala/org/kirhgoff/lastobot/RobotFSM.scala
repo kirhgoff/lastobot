@@ -17,6 +17,7 @@ case class BotHearsText (text:String) extends BotMessages
 final case class Obey()
 final case class Eat()
 final case class Abuse()
+final case class Smoke()
 final case class UnknownCommand()
 
 //sent messages
