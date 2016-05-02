@@ -1,11 +1,12 @@
 package org.kirhgoff.lastobot
 
-import akka.actor.{Props, ActorRef, Actor}
+import akka.actor.{Actor, ActorRef, Props}
 import info.mukel.telegram.bots.TelegramBot
 import info.mukel.telegram.bots.OptionPimps._
-import info.mukel.telegram.bots.api.{ReplyKeyboardMarkup, ReplyMarkup, Message}
+import info.mukel.telegram.bots.api.{Message, ReplyKeyboardMarkup, ReplyMarkup}
 
 import scala.collection.mutable
+import scala.util.Try
 
 /**
   * Created by kirilllastovirya on 26/04/2016.
@@ -13,20 +14,23 @@ import scala.collection.mutable
   * Class processes requests received from user and converts them
   * into internal bot events, creating bots per sender
   */
-class UserInputProcessor(val bot:TelegramBot) extends Actor {
+class UserRouter(val bot:TelegramBot) extends Actor {
   val senderMap = mutable.Map[Int, ActorRef]()
+  val storageFactory = new StorageBotFactory ("localhost", 27017)
+
   override def receive: Receive = {
     case UserCommand(sender, commandName, args) ⇒ commandName match {
-      case "obey" => senderActor (sender) ! Obey
-      case "eat" => senderActor (sender) ! Eat
-      case "abuse" => senderActor (sender) ! Abuse
-      case _ => senderActor (sender) ! UnknownCommand
+      case "obey" => senderActor (sender) ! Command.Obey
+      case "eat" => senderActor (sender) ! Command.Eat
+      case "abuse" => senderActor (sender) ! Command.Abuse
+      case "smoke" => senderActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
+      case any => println("Unknown command " + any)
     }
-    case UserText(msg:Message) => {
-      senderActor(msg.chat.id) ! BotHearsText(msg.text.getOrElse("blah"))
+    case UserTextMessage(msg:Message) => {
+      senderActor(msg.chat.id) ! UserSaid(msg.text.getOrElse("blah"))
     }
 
-    //Receives from bot
+    //Feedback
     case Text(sender:Int, text:String) => {
       bot.sendMessage(sender, text)
     }
@@ -41,8 +45,11 @@ class UserInputProcessor(val bot:TelegramBot) extends Actor {
   }
 
   def senderActor(senderId: Int): ActorRef = {
+    val userStorage: UserStorage = storageFactory.userStorageFor(senderId)
     senderMap.getOrElseUpdate(senderId,
-      context.actorOf(Props(new RobotFSM(senderId)), name = s"Sender$senderId")
+      context.actorOf(Props(new Lastobot(senderId, userStorage)), name = s"Sender$senderId")
     )
   }
+
+  override def postStop() = storageFactory.close
 }

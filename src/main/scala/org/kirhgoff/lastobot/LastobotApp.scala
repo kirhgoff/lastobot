@@ -13,29 +13,31 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
   with Polling with Commands {
 
   val system  = ActorSystem(s"Lastobot")
-  var userInputProcessor = system.actorOf(Props(new UserInputProcessor(this)),
+  var userInputProcessor = system.actorOf(Props(new UserRouter(this)),
     name = "userInput")
 
   val states = {
-    on("eat") { (sender, args) =>
-      userInputProcessor ! UserCommand(sender, "eat", args)
-    }
-    on("obey") { (sender, args) =>
-      userInputProcessor ! UserCommand(sender, "obey", args)
-    }
-    on("abuse") { (sender, args) =>
-      userInputProcessor ! UserCommand(sender, "abuse", args)
-    }
-
+    List("eay", "obey", "abuse", "smoke", "stats").foreach(
+      c  => on(c) { (sender, args) =>
+        userInputProcessor ! UserCommand(sender, c, args)
+      }
+    )
   }
   override def onText(text: String, message: Message): Unit =
-    userInputProcessor ! UserText(message)
+    userInputProcessor ! UserTextMessage(message)
+
+  def terminate = {
+    system.terminate()
+  }
 }
 
 object LastobotApp {
   def main(args: Array[String]): Unit = {
-    println("Lastobot starting")
-    new LastobotApp().run()
+    println("lastobot is running")
+    val app: LastobotApp = new LastobotApp()
+    app.run
+    //TODO how to terminate correctly
+    app.terminate
   }
 }
 

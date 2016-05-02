@@ -3,6 +3,15 @@
 Playground for telegram bot
 
 -------------------
+lastobot
+-------------------
+obey - Make bot obey you
+eat - Bot gives you some food
+abuse - Let bot plays russian joke with you
+smoke - Ask bot to remember that you smoked xx cigarettes recently
+stats - Ask bot to print statistics for your smoking habit
+
+-------------------
 Measures bot
 -------------------
 
