@@ -17,9 +17,11 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
     name = "userRouter")
 
   val states = {
-    List("eay", "obey", "abuse", "smoke", "stats").foreach(
-      c  => on(c) { (sender, args) =>
-        userRouter ! UserCommand(sender, c, args)
+    List("eat", "obey", "abuse", "smoke", "stats").foreach(
+      c  => on(c) { (sender, args) => {
+          println(s"Sending user command: $c")
+          userRouter ! UserCommand(sender, c, args)
+        }
       }
     )
   }

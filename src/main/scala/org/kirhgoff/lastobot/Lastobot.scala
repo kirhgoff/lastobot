@@ -1,7 +1,12 @@
 package org.kirhgoff.lastobot
 
+
+import java.util.Objects
+import java.util.Arrays
+
 import akka.actor.FSM
 import info.mukel.telegram.bots.api.Message
+import org.apache.commons.lang3.ArrayUtils
 
 //What Telegram bot receives
 trait UserMessages
@@ -19,14 +24,22 @@ object Command {
 
 //Feedback messages
 final case class Text(sender:Int, text:String)
-final case class Keyboard(sender:Int, text:String, buttons:Array[Array[String]])
+final case class Keyboard(sender:Int, text:String, buttons:Array[Array[String]]) {
+  override def equals(other: Any) = other match {
+    case Keyboard (s, t, b) if s == sender &&
+      ((t == null && text == null) || t.equals(text)) &&
+      Objects.deepEquals(b, buttons) => true
+    case _ => false
+  }
+  override def toString =
+    s"Keyboard for $sender text=($text) buttons=${buttons.deep.mkString}"
+
+}
 
 //states
 sealed trait State
 case object Serving extends State
-case object ChoosingFood extends State
 case object Abusing extends State
-case object ReportingSmoke extends State
 case object ConfirmingSmoke extends State
 case object ShowingStats extends State
 
@@ -51,23 +64,28 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   when(Serving) {
     case Event(Command.Obey, _) => {
       sender() ! Text(senderId, "Yes, my master!")
-      goto(Serving)
+      stay
     }
-    case Event(Command.Eat, _) => goto(ChoosingFood)
-    case Event(Command.Abuse, _) => goto(Abusing)
+    case Event(Command.Eat, _) => {
+      println("Bot receieved Eat")
+      //TODO use i18n
+      sender() ! Keyboard(senderId,
+        "What food may I serve you, my master?",
+        Array(Array("bread", "butter", "beer")))
+      stay
+    }
+    case Event(Command.Abuse, _) => {
+      sender() ! Keyboard(senderId,
+        "Скажи \"да\"",
+        Array(Array("да", "нет")))
+      goto(Abusing)
+    }
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
-    case Event(Command.SmokingStats, _) => {
-      println("Going to ShowingStats")
-      goto(ShowingStats)
-    }
+    case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
   }
 
   when(ShowingStats) {
-    case _ => goto(Serving)
-  }
-
-  when(ChoosingFood) {
     case _ => goto(Serving)
   }
 
@@ -87,14 +105,6 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   onTransition {
-    case Serving -> ChoosingFood =>
-      sender() ! Keyboard(senderId,
-        "What food may I serve you, my master?",
-        Array(Array("bread", "butter", "beer")))
-    case Serving -> Abusing =>
-      sender() ! Keyboard(senderId,
-        "Скажи да",
-        Array(Array("да", "нет")))
     case Abusing -> Serving => nextStateData match {
       case UserSaid(text) if text.startsWith("да") =>
         sender() ! Text(senderId, "Манда!")

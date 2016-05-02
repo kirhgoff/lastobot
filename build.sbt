@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
     "org.scalatest"   %% "scalatest"    % "2.2.4"   % "test",
     "org.scalacheck"  %% "scalacheck"   % "1.12.5"      % "test",
     "info.mukel" %% "telegrambot4s" % "1.0.4-SNAPSHOT",
+    "org.apache.commons" % "commons-lang3" % "3.4",
     "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4",
     "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
     //"org.mongodb.scala" %% "mongo-scala-driver" % "1.1.0"

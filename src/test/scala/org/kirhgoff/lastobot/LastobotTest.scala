@@ -2,7 +2,7 @@ package org.kirhgoff.lastobot
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit}
-import org.kirhgoff.lastobot.Command.{Abuse, Smoke, SmokingStats}
+import org.kirhgoff.lastobot.Command._
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -22,6 +22,42 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
     }
+
+    "should obey" in {
+      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(1, null))
+      bot.stateName should be(Serving)
+      bot.stateData should be(Empty)
+
+      bot ! Obey
+      expectMsg(Text(1, "Yes, my master!"))
+      bot.stateName should be(Serving)
+    }
+
+    "Keyboards should match" in {
+      val keyboard1 = Keyboard(666,
+        "What food may I serve you, my master?",
+        Array(Array("bread", "butter", "beer")))
+
+      val keyboard2 = Keyboard(666,
+        "What food may I serve you, my master?",
+        Array(Array("bread", "butter", "beer")))
+
+      keyboard1 should equal(keyboard2)
+      keyboard2 should equal(keyboard1)
+    }
+
+    "should feed master" in {
+      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(666, null))
+      bot.stateName should be(Serving)
+      bot.stateData should be(Empty)
+
+      bot ! Eat
+      expectMsg(Keyboard(666,
+        "What food may I serve you, my master?",
+        Array(Array("bread", "butter", "beer"))))
+      bot.stateName should be(Serving)
+    }
+
 
     "should abuse correctly" in {
       val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(1, null))
