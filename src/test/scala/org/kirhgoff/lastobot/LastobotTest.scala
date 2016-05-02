@@ -2,16 +2,18 @@ package org.kirhgoff.lastobot
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit}
-import org.kirhgoff.lastobot.Command.{Abuse, Smoke}
+import org.kirhgoff.lastobot.Command.{Abuse, Smoke, SmokingStats}
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 import scala.concurrent.duration.{Duration, DurationInt}
 
 class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with Matchers with FreeSpecLike with BeforeAndAfterAll {
   def this() = this(ActorSystem("LastobotSpec"))
+  val userStorage = new StorageBotFactory("localhost", 27017).userStorageFor(666)
 
   override def afterAll(): Unit = {
     system.terminate()
+    userStorage.db.dropDatabase()
   }
 
   "RobotFSM actor" - {
@@ -42,7 +44,6 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     }
 
     "should take care of smoking" in {
-      val userStorage = new StorageBotFactory("localhost", 27017).userStorageFor(666)
       userStorage.clear()
       userStorage.smokedOverall() should equal(0)
 
@@ -62,6 +63,11 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       bot.stateData should be(Yes)
 
       userStorage.smokedOverall() should equal(42)
+
+      bot.stateName should be(Serving)
+      bot ! SmokingStats
+
+      bot.stateName should be(ShowingStats)
     }
 
   }

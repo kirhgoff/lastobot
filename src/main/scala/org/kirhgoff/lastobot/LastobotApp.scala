@@ -13,18 +13,18 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
   with Polling with Commands {
 
   val system  = ActorSystem(s"Lastobot")
-  var userInputProcessor = system.actorOf(Props(new UserRouter(this)),
-    name = "userInput")
+  var userRouter = system.actorOf(Props(new UserRouter(this)),
+    name = "userRouter")
 
   val states = {
     List("eay", "obey", "abuse", "smoke", "stats").foreach(
       c  => on(c) { (sender, args) =>
-        userInputProcessor ! UserCommand(sender, c, args)
+        userRouter ! UserCommand(sender, c, args)
       }
     )
   }
   override def onText(text: String, message: Message): Unit =
-    userInputProcessor ! UserTextMessage(message)
+    userRouter ! UserTextMessage(message)
 
   def terminate = {
     system.terminate()

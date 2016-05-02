@@ -30,7 +30,10 @@ class UserStorage(val db:MongoDB) {
         "total" -> MongoDBObject("$sum" -> "$count")
       )
     )))
-    total.results.headOption.getOrElse("total", 1).asInstanceOf[Int]
+    total.results.headOption match {
+      case None => 0
+      case Some(result) => result("total").asInstanceOf[Int]
+    }
   }
 
   def clear() = smokes.drop()

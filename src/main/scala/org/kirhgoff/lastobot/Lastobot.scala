@@ -49,14 +49,18 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   startWith(Serving, Empty)
 
   when(Serving) {
-    case Event(Command.Obey, _) => goto(Serving)
+    case Event(Command.Obey, _) => {
+      sender() ! Text(senderId, "Yes, my master!")
+      goto(Serving)
+    }
     case Event(Command.Eat, _) => goto(ChoosingFood)
     case Event(Command.Abuse, _) => goto(Abusing)
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
-    case Event(Command.SmokingStats(), _) => goto(ShowingStats)
-
-    //TODO check for "smoke" root
-    //case Event(UserSaid(text), _) => goto(Serving)
+    case Event(Command.SmokingStats, _) => {
+      println("Going to ShowingStats")
+      goto(ShowingStats)
+    }
+    case Event(UserSaid(text), _) => goto(Serving)
   }
 
   when(ShowingStats) {
@@ -73,9 +77,9 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   when(ConfirmingSmoke) {
-    case Event(UserSaid(text), Empty) if text.startsWith("да") =>
+    case Event(UserSaid(text), _) if text.startsWith("да") =>
       goto(Serving) using Yes
-    case Event(UserSaid(text), Empty) if text.startsWith("нет") =>
+    case Event(UserSaid(text), _) if text.startsWith("нет") =>
       goto(Serving) using No
     case _ =>
       goto(Serving) using What
@@ -83,8 +87,6 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   onTransition {
-    case Serving -> Serving =>
-      sender() ! Text(senderId, "Yes, my master!")
     case Serving -> ChoosingFood =>
       sender() ! Keyboard(senderId,
         "What food may I serve you, my master?",
@@ -97,6 +99,12 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       case UserSaid(text) if text.startsWith("да") =>
         sender() ! Text(senderId, "Манда!")
     }
+    case Serving -> ConfirmingSmoke => nextStateData match {
+      case UserSmoked(count) => sender() ! Keyboard(senderId,
+        s"Вы выкурили $count сигарет(у)?",
+        Array(Array("да", "нет")))
+      case _ =>
+    }
     case ConfirmingSmoke -> Serving => nextStateData match {
       case Yes => stateData match {
         case UserSmoked(count) => {
@@ -107,7 +115,8 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       }
       case _ => sender() ! Text(senderId, "OK, cancelled.")
     }
-    case ShowingStats -> Serving => {
+    case Serving -> ShowingStats => {
+      println("ShowingStats -> Serving")
       val smoked = userStorage.smokedOverall()
       sender() ! Text(senderId, s"Master, you smoke $smoked cigarettes overall")
     }

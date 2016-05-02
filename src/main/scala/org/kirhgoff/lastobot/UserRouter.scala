@@ -24,6 +24,7 @@ class UserRouter(val bot:TelegramBot) extends Actor {
       case "eat" => senderActor (sender) ! Command.Eat
       case "abuse" => senderActor (sender) ! Command.Abuse
       case "smoke" => senderActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
+      case "stats" => senderActor (sender) ! Command.SmokingStats
       case any => println("Unknown command " + any)
     }
     case UserTextMessage(msg:Message) => {
