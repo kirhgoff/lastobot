@@ -90,7 +90,10 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   when(Abusing) {
-    case Event(UserSaid(text), Empty) => goto(Serving) using UserSaid(text)
+    case Event(UserSaid(text), Empty) => {
+      println(s"Going to serving with state=$text")
+      goto(Serving) using UserSaid(text)
+    }
     case _ => goto(Serving)
   }
 
@@ -108,6 +111,7 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
     case Abusing -> Serving => nextStateData match {
       case UserSaid(text) if text.startsWith("да") =>
         sender() ! Text(senderId, "Манда!")
+      case _ =>
     }
     case Serving -> ConfirmingSmoke => nextStateData match {
       case UserSmoked(count) => sender() ! Keyboard(senderId,

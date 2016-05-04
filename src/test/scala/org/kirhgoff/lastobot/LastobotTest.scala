@@ -60,7 +60,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 
 
     "should abuse correctly" in {
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(1, null))
+      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(666, null))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
 
@@ -69,14 +69,22 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       bot.stateData should be(Empty)
       //TODO why it does not work
       //expectMsgAnyClassOf[Keyboard]()
-      receiveOne(1 seconds)
+      expectMsg(Keyboard(666,
+        "Скажи \"да\"",
+        Array(Array("да", "нет"))))
 
       bot ! UserSaid("да")
-      expectMsg(Text(1, "Манда!"))
+      expectMsg(Text(666, "Манда!"))
       bot.stateName should be(Serving)
 
       bot ! Abuse
       bot.stateName should be(Abusing)
+      expectMsg(Keyboard(666,
+        "Скажи \"да\"",
+        Array(Array("да", "нет"))))
+      bot ! UserSaid("нет")
+      bot.stateName should be(Serving)
+      expectNoMsg()
     }
 
     "should take care of smoking" in {
