@@ -18,13 +18,13 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 
   "RobotFSM actor" - {
     "should be uninitialized" in {
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(1, null))
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(1, null))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
     }
 
     "should obey" in {
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(1, null))
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(1, null))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
 
@@ -47,7 +47,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     }
 
     "should feed master" in {
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(666, null))
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, null))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
 
@@ -60,7 +60,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 
 
     "should abuse correctly" in {
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(666, null))
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, null))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
 
@@ -91,7 +91,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       userStorage.clear()
       userStorage.smokedOverall() should equal(0)
 
-      val bot = TestFSMRef[State, Data, Lastobot](new Lastobot(666, userStorage))
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
       bot.stateName should be(Serving)
       bot.stateData should be(Empty)
 

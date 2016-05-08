@@ -20,15 +20,17 @@ class UserRouter(val bot:TelegramBot) extends Actor {
 
   override def receive: Receive = {
     case UserCommand(sender, commandName, args) ⇒ commandName match {
-      case "obey" => senderActor (sender) ! Command.Obey
-      case "eat" => senderActor (sender) ! Command.Eat
-      case "abuse" => senderActor (sender) ! Command.Abuse
-      case "smoke" => senderActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
-      case "stats" => senderActor (sender) ! Command.SmokingStats
+      case "obey" => userActor (sender) ! Command.Obey
+      case "eat" => userActor (sender) ! Command.Eat
+      case "abuse" => userActor (sender) ! Command.Abuse
+        //TODO proper int parsing
+      case "smoke" => userActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
+      case "stats" => userActor (sender) ! Command.SmokingStats
+      case "start" => bot.sendMessage(sender, PhraseStorage.start())
       case any => println("Unknown command " + any)
     }
     case UserTextMessage(msg:Message) => {
-      senderActor(msg.chat.id) ! UserSaid(msg.text.getOrElse("blah"))
+      userActor(msg.chat.id) ! UserSaid(msg.text.getOrElse("blah"))
     }
 
     //Feedback
@@ -45,10 +47,10 @@ class UserRouter(val bot:TelegramBot) extends Actor {
     }
   }
 
-  def senderActor(senderId: Int): ActorRef = {
+  def userActor(senderId: Int): ActorRef = {
     val userStorage: UserStorage = storageFactory.userStorageFor(senderId)
     senderMap.getOrElseUpdate(senderId,
-      context.actorOf(Props(new Lastobot(senderId, userStorage)), name = s"Sender$senderId")
+      context.actorOf(Props(new SmokeBot(senderId, userStorage)), name = s"Sender$senderId")
     )
   }
 

@@ -15,6 +15,7 @@ case class UserTextMessage(msg:Message) extends UserMessages
 
 //received commands
 object Command {
+  final case class Start()
   final case class Obey()
   final case class Eat()
   final case class Abuse()
@@ -55,7 +56,7 @@ final case class UserSmoked(count:Int) extends Data
 /**
   * Created by kirilllastovirya on 26/04/2016.
   */
-class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] {
+class SmokeBot(val senderId: Int, val userStorage: UserStorage, val locale:BotLocale) extends FSM[State, Data] {
 
   //TODO add language setting
 
