@@ -56,34 +56,37 @@ final case class UserSmoked(count:Int) extends Data
 /**
   * Created by kirilllastovirya on 26/04/2016.
   */
-class SmokeBot(val senderId: Int, val userStorage: UserStorage, val locale:BotLocale) extends FSM[State, Data] {
+class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] {
 
-  //TODO add language setting
+  //By default bot is english
+  //TODO make it implicit
+  var locale = userStorage.getLocaleOr(English)
 
   startWith(Serving, Empty)
 
   when(Serving) {
     case Event(Command.Obey, _) => {
-      sender() ! Text(senderId, "Yes, my master!")
+      sender() ! Text(senderId, Phrase.obey(locale))
       stay
     }
     case Event(Command.Eat, _) => {
-      println("Bot receieved Eat")
-      //TODO use i18n
-      sender() ! Keyboard(senderId,
-        "What food may I serve you, my master?",
-        Array(Array("bread", "butter", "beer")))
+      sender() ! Keyboard(senderId, Phrase.whatFoodToServe(locale),
+        Array(Phrase.foodChoices(locale)))
       stay
     }
-    case Event(Command.Abuse, _) => {
+    case Event(Command.Abuse, _) =>
       sender() ! Keyboard(senderId,
         "Скажи \"да\"",
         Array(Array("да", "нет")))
       goto(Abusing)
-    }
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
+    case Event(Command.Start, _) => {
+      sender() ! Text(senderId, Phrase.intro(locale))
+      stay
+    }
+
   }
 
   when(ShowingStats) {
@@ -91,10 +94,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage, val locale:BotLo
   }
 
   when(Abusing) {
-    case Event(UserSaid(text), Empty) => {
-      println(s"Going to serving with state=$text")
-      goto(Serving) using UserSaid(text)
-    }
+    case Event(UserSaid(text), Empty) => goto(Serving) using UserSaid(text)
     case _ => goto(Serving)
   }
 

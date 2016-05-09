@@ -19,6 +19,11 @@ class StorageBotFactory(val databaseHost:String, val databasePort:Int) {
 
 //TODO Implement actor to perform db actions
 class UserStorage(val db:MongoDB) {
+  def getLocaleOr(defaultLocale: BotLocale) =  {
+    //TODO load locale from database or save default
+    defaultLocale
+  }
+
   val smokes = db("smokes")
   def smoked(count:Int) = {
     smokes.insert(MongoDBObject("count" -> count, "date" -> new Date))
