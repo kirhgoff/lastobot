@@ -10,8 +10,17 @@ trait BotLocale
 case object Russian extends BotLocale
 case object English extends BotLocale
 
+object Recognizer {
+  def yes (text:String) = text.startsWith("да") || text.startsWith("yes")
+  def no(text:String) = text.startsWith("нет") || text.startsWith("no")
+}
+
+//TODO refactor locale match to partial function
+
 object Phrase {
   val random = new Random
+
+  def anyOf(text:String*) = text(random.nextInt(text.length))
 
   def intro(locale: BotLocale) = locale match {
     case English =>
@@ -48,5 +57,43 @@ object Phrase {
     case Russian => Array("хлеб", "масло", "пиво")
   }
 
-  def anyOf(text:String*) = text(random.nextInt(text.length))
+  def sayYes(locale: BotLocale): String = locale match {
+    case English => "Say \"yes\""
+    case Russian => "Скажи \"да\""
+  }
+
+  def yesNo(locale: BotLocale): Array[String] = locale match {
+    case Russian => Array("да", "нет")
+    case English => Array("yes", "no")
+  }
+
+  def abuseReply(locale: BotLocale): String = locale match {
+    case Russian => "Манда!"
+    case English => "ABKHSS"
+  }
+
+  def what(locale: BotLocale): String = locale match {
+    case English => "You got me confused"
+    case Russian => "Ничего не понял"
+  }
+
+  def cancelled(locale: BotLocale): String = locale match {
+    case English => "OK, cancelled."
+    case Russian => "Отменяю"
+  }
+
+  def youSmokeQuestion(count: Int, locale: BotLocale): String = locale match {
+    case Russian => s"Сигарет выкурено: $count?" //TODO different cases
+    case English => s"You smoked $count cigarettes?"
+  }
+
+  def youSmokeConfirmed(count: Int, locale: BotLocale): String = locale match {
+    case English => s"Done, you smoked $count cigarettes, master"
+    case Russian => s"Хозяин, сигарет выкурено: $count"
+  }
+
+  def smokedOverall(smoked: Int, locale: BotLocale): String = locale match {
+    case English => s"Master, you smoke $smoked cigarettes overall"
+    case Russian => s"Хозяин, вы выкурили всего $smoked сигарет"
+  }
 }

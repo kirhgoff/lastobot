@@ -8,6 +8,8 @@ import akka.actor.FSM
 import info.mukel.telegram.bots.api.Message
 import org.apache.commons.lang3.ArrayUtils
 
+import org.kirhgoff.lastobot.Phrase._
+
 //What Telegram bot receives
 trait UserMessages
 case class UserCommand(sender:Int, commandName:String, args:Seq[String]) extends UserMessages
@@ -66,27 +68,26 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
 
   when(Serving) {
     case Event(Command.Obey, _) => {
-      sender() ! Text(senderId, Phrase.obey(locale))
+      sender() ! Text(senderId, obey(locale))
       stay
     }
     case Event(Command.Eat, _) => {
-      sender() ! Keyboard(senderId, Phrase.whatFoodToServe(locale),
-        Array(Phrase.foodChoices(locale)))
+      sender() ! Keyboard(senderId, whatFoodToServe(locale),
+        Array(foodChoices(locale)))
       stay
     }
     case Event(Command.Abuse, _) =>
       sender() ! Keyboard(senderId,
-        "Скажи \"да\"",
-        Array(Array("да", "нет")))
+        sayYes(locale),
+        Array(Phrase.yesNo(locale)))
       goto(Abusing)
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
     case Event(Command.Start, _) => {
-      sender() ! Text(senderId, Phrase.intro(locale))
+      sender() ! Text(senderId, intro(locale))
       stay
     }
-
   }
 
   when(ShowingStats) {
@@ -99,41 +100,39 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   when(ConfirmingSmoke) {
-    case Event(UserSaid(text), _) if text.startsWith("да") =>
+    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
       goto(Serving) using Yes
-    case Event(UserSaid(text), _) if text.startsWith("нет") =>
+    case Event(UserSaid(text), _) if Recognizer.no(text) =>
       goto(Serving) using No
     case _ =>
       goto(Serving) using What
-
   }
 
   onTransition {
     case Abusing -> Serving => nextStateData match {
-      case UserSaid(text) if text.startsWith("да") =>
-        sender() ! Text(senderId, "Манда!")
+      case UserSaid(text) if Recognizer.yes(text) =>
+        sender() ! Text(senderId, abuseReply(locale))
       case _ =>
     }
     case Serving -> ConfirmingSmoke => nextStateData match {
       case UserSmoked(count) => sender() ! Keyboard(senderId,
-        s"Вы выкурили $count сигарет(у)?",
-        Array(Array("да", "нет")))
+        youSmokeQuestion(count, locale),
+        Array(yesNo(locale)))
       case _ =>
     }
     case ConfirmingSmoke -> Serving => nextStateData match {
       case Yes => stateData match {
         case UserSmoked(count) => {
           userStorage.smoked(count)
-          sender() ! Text(senderId, s"Done, you smoked $count cigarettes, master")
+          sender() ! Text(senderId, youSmokeConfirmed(count, locale))
         }
-        case _ => sender() ! Text(senderId, s"You got me confused")
+        case _ => sender() ! Text(senderId, what(locale))
       }
-      case _ => sender() ! Text(senderId, "OK, cancelled.")
+      case _ => sender() ! Text(senderId, cancelled(locale))
     }
     case Serving -> ShowingStats => {
-      println("ShowingStats -> Serving")
       val smoked = userStorage.smokedOverall()
-      sender() ! Text(senderId, s"Master, you smoke $smoked cigarettes overall")
+      sender() ! Text(senderId, smokedOverall(smoked, locale))
     }
   }
 
