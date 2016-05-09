@@ -22,8 +22,39 @@ object Phrase {
 
   def anyOf(text:String*) = text(random.nextInt(text.length))
 
-  def intro(locale: BotLocale) = locale match {
-    case English =>
+  def russian(text:String, vars:Any*)(implicit locale: BotLocale)
+    :PartialFunction[BotLocale, String] =
+    {case locale if locale == Russian => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
+
+  def english(text:String, vars:Any*)(implicit locale: BotLocale)
+    :PartialFunction[BotLocale, String] =
+    {case locale if locale == English => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
+
+  def russianArray(text:String*)(implicit locale: BotLocale)
+    :PartialFunction[BotLocale, Array[String]] =
+    {case locale if locale == Russian => text.toArray}
+
+  def englishArray(text:String*)(implicit locale: BotLocale)
+    :PartialFunction[BotLocale, Array[String]] =
+    //{case locale if locale == English => text.asInstanceOf[Array[String]]}
+    {case locale if locale == English => text.toArray}
+
+
+  //TODO make implicits
+  def compose(
+     partial1:PartialFunction[BotLocale, String],
+     partial2:PartialFunction[BotLocale, String]
+   )(implicit locale: BotLocale) =
+    partial1.orElse(partial2).apply(locale)
+
+  def composeArray(
+     partial1:PartialFunction[BotLocale, Array[String]],
+     partial2:PartialFunction[BotLocale, Array[String]]
+   )(implicit locale: BotLocale) =
+    partial1.orElse(partial2).apply(locale)
+
+  def intro(implicit locale: BotLocale) = compose(
+    english(
       "This is prototype of SmokeBot [v1.1]\n" +
         "The idea of the bot is that when you need to control something in you life " +
         "you can choose a way to measure it and make the bot take care of measurements " +
@@ -32,68 +63,68 @@ object Phrase {
         "notice a bunch of stubs in your ashtray) you let bot know the number with command " +
         "/smoke (you could specify the amount). When you want to see how many cigarettes " +
         "you smoke, you ask for /stats and bot gives you some stats. So... how may I serve " +
-        "you, Master?"
-    case Russian =>
+        "you, Master?"),
+    russian(
       "Это прототип бота SmokeBot [v1.1]\n" +
         "Идея состоит в том, что если вам хочется контроллировать что-то в вашей " +
         "жизни, один из способов - это выбрать способ мерять это, и с помощью бота наблюдать " +
         "за этим измерением, будь то ваш вес или количество выкуренных вами сигарет. Вы можете " +
         "сообщить боту сколько вы выкурили сигарет недавно /smoke, а он будет готов выдать вам " +
-        "статистику. Так что... чем я могу служить вам, Хозяин?"
-  }
+        "статистику. Так что... чем я могу служить вам, Хозяин?")
+  )
 
-  def obey(locale: BotLocale): String = locale match {
-    case English => anyOf("Yes, my master!", "I am listening, my master!")
-    case Russian => anyOf("Да, хозяин!", "Да, мой господин!", "Слушаю и повинуюсь!")
-  }
+  def obey(implicit locale: BotLocale): String = compose (
+    english(anyOf("Yes, my master!", "I am listening, my master!")),
+    russian(anyOf("Да, хозяин!", "Да, мой господин!", "Слушаю и повинуюсь!"))
+  )
 
-  def whatFoodToServe(locale: BotLocale): String = locale match {
-    case English => anyOf("What food may I serve you, my master?", "What would you like, master?")
-    case Russian => anyOf("Чего изволити?", "Чтобы вы хотели?")
-  }
+  def whatFoodToServe(implicit locale: BotLocale): String = compose (
+    english(anyOf("What food may I serve you, my master?", "What would you like, master?")),
+    russian(anyOf("Чего изволити?", "Чтобы вы хотели?"))
+  )
 
-  def foodChoices(locale: BotLocale): Array[String] = locale match {
-    case English => Array("bread", "butter", "beer")
-    case Russian => Array("хлеб", "масло", "пиво")
-  }
+  def foodChoices(implicit locale: BotLocale): Array[String] = composeArray (
+    englishArray("bread", "butter", "beer"),
+    russianArray("хлеб", "масло", "пиво")
+  )
 
-  def sayYes(locale: BotLocale): String = locale match {
-    case English => "Say \"yes\""
-    case Russian => "Скажи \"да\""
-  }
+  def sayYes(implicit locale: BotLocale): String = compose (
+    english("Say \"yes\""),
+    russian("Скажи \"да\"")
+  )
 
-  def yesNo(locale: BotLocale): Array[String] = locale match {
-    case Russian => Array("да", "нет")
-    case English => Array("yes", "no")
-  }
+  def yesNo(implicit locale: BotLocale): Array[String] = composeArray (
+    russianArray("да", "нет"),
+    englishArray("yes", "no")
+  )
 
-  def abuseReply(locale: BotLocale): String = locale match {
-    case Russian => "Манда!"
-    case English => "ABKHSS"
-  }
+  def abuseReply(implicit locale: BotLocale): String = compose (
+    russian("Манда!"),
+    english("ABKHSS")
+  )
 
-  def what(locale: BotLocale): String = locale match {
-    case English => "You got me confused"
-    case Russian => "Ничего не понял"
-  }
+  def what(implicit locale: BotLocale): String = compose (
+    english("You got me confused"),
+    russian("Ничего не понял")
+  )
 
-  def cancelled(locale: BotLocale): String = locale match {
-    case English => "OK, cancelled."
-    case Russian => "Отменяю"
-  }
+  def cancelled(implicit locale: BotLocale): String = compose (
+    english("OK, cancelled."),
+    russian("Отменяю")
+  )
 
-  def youSmokeQuestion(count: Int, locale: BotLocale): String = locale match {
-    case Russian => s"Сигарет выкурено: $count?" //TODO different cases
-    case English => s"You smoked $count cigarettes?"
-  }
+  def youSmokeQuestion(count: Int)(implicit locale: BotLocale): String = compose (
+    russian(s"Сигарет выкурено: $count?"), //TODO different cases
+    english(s"You smoked $count cigarettes?")
+  )
 
-  def youSmokeConfirmed(count: Int, locale: BotLocale): String = locale match {
-    case English => s"Done, you smoked $count cigarettes, master"
-    case Russian => s"Хозяин, сигарет выкурено: $count"
-  }
+  def youSmokeConfirmed(count: Int)(implicit locale: BotLocale): String = compose (
+    english(s"Done, you smoked $count cigarettes, master"),
+    russian(s"Хозяин, сигарет выкурено: $count")
+ )
 
-  def smokedOverall(smoked: Int, locale: BotLocale): String = locale match {
-    case English => s"Master, you smoke $smoked cigarettes overall"
-    case Russian => s"Хозяин, вы выкурили всего $smoked сигарет"
-  }
+  def smokedOverall(smoked: Int)(implicit locale: BotLocale): String = compose (
+    english(s"Master, you smoke $smoked cigarettes overall"),
+    russian(s"Хозяин, вы выкурили всего $smoked сигарет")
+  )
 }

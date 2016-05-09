@@ -62,7 +62,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
 
   //By default bot is english
   //TODO make it implicit
-  var locale = userStorage.getLocaleOr(English)
+  implicit var locale:BotLocale = userStorage.getLocaleOr(English)
 
   startWith(Serving, Empty)
 
@@ -116,7 +116,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
     }
     case Serving -> ConfirmingSmoke => nextStateData match {
       case UserSmoked(count) => sender() ! Keyboard(senderId,
-        youSmokeQuestion(count, locale),
+        youSmokeQuestion(count),
         Array(yesNo(locale)))
       case _ =>
     }
@@ -124,7 +124,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       case Yes => stateData match {
         case UserSmoked(count) => {
           userStorage.smoked(count)
-          sender() ! Text(senderId, youSmokeConfirmed(count, locale))
+          sender() ! Text(senderId, youSmokeConfirmed(count))
         }
         case _ => sender() ! Text(senderId, what(locale))
       }
@@ -132,7 +132,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
     }
     case Serving -> ShowingStats => {
       val smoked = userStorage.smokedOverall()
-      sender() ! Text(senderId, smokedOverall(smoked, locale))
+      sender() ! Text(senderId, smokedOverall(smoked))
     }
   }
 
