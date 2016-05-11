@@ -65,24 +65,24 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
 
   when(Serving) {
     case Event(Command.Obey, _) => {
-      sender() ! Text(senderId, obey(locale))
+      sender() ! Text(senderId, obey)
       stay
     }
     case Event(Command.Eat, _) => {
-      sender() ! Keyboard(senderId, whatFoodToServe(locale),
-        Array(foodChoices(locale)))
+      sender() ! Keyboard(senderId, whatFoodToServe,
+        Array(foodChoices))
       stay
     }
     case Event(Command.Abuse, _) =>
       sender() ! Keyboard(senderId,
-        sayYes(locale),
-        Array(Phrase.yesNo(locale)))
+        sayYes,
+        Array(Phrase.yesNo))
       goto(Abusing)
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
     case Event(Command.Start, _) => {
-      sender() ! Text(senderId, intro(locale))
+      sender() ! Text(senderId, intro)
       stay
     }
   }
@@ -123,7 +123,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
           userStorage.smoked(count)
           sender() ! Text(senderId, youSmokeConfirmed(count))
         }
-        case _ => sender() ! Text(senderId, what(locale))
+        case _ => sender() ! Text(senderId, what)
       }
       case _ => sender() ! Text(senderId, cancelled(locale))
     }
