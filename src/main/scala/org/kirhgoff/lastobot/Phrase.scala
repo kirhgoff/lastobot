@@ -22,6 +22,15 @@ object Phrase {
 
   def anyOf(text:String*) = text(random.nextInt(text.length))
 
+  def phraseCase(text:String, vars:Any*)
+                (caseLocale: BotLocale)
+                (implicit locale: BotLocale) :PartialFunction[BotLocale, String] = {
+    case locale if locale == caseLocale => text.format(vars.map(_.asInstanceOf[AnyRef]): _*)
+  }
+
+  def russian (text:String, vars:Any*)(implicit locale: BotLocale) = phraseCase(text, vars:_*)(Russian)
+  def english (text:String, vars:Any*)(implicit locale: BotLocale) = phraseCase(text, vars:_*)(English)
+  /*
   def russian(text:String, vars:Any*)(implicit locale: BotLocale)
     :PartialFunction[BotLocale, String] =
     {case locale if locale == Russian => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
@@ -29,6 +38,7 @@ object Phrase {
   def english(text:String, vars:Any*)(implicit locale: BotLocale)
     :PartialFunction[BotLocale, String] =
     {case locale if locale == English => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
+  */
 
   def russianArray(text:String*)(implicit locale: BotLocale)
     :PartialFunction[BotLocale, Array[String]] =

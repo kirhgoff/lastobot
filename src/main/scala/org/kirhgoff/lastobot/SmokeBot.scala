@@ -2,12 +2,9 @@ package org.kirhgoff.lastobot
 
 
 import java.util.Objects
-import java.util.Arrays
 
 import akka.actor.FSM
 import info.mukel.telegram.bots.api.Message
-import org.apache.commons.lang3.ArrayUtils
-
 import org.kirhgoff.lastobot.Phrase._
 
 //What Telegram bot receives
