@@ -7,10 +7,29 @@ import java.util.Random
   */
 
 trait BotLocale
-case object Russian extends BotLocale
-case object English extends BotLocale
+case object Russian extends BotLocale {
+  override def toString = "Russian"
+}
+case object English extends BotLocale {
+  override def toString = "English"
+}
+
+object BotLocale {
+  def apply(value:String): BotLocale = value match {
+    case "Russian" => Russian
+    case "English" => English
+    case other => {
+      println("Incorrect locale value:" + other)
+      English
+    }
+  }
+}
 
 object Recognizer {
+  //TODO use regexps
+  def russian(text: String) = text.startsWith("Русский") || text.startsWith("русский")
+  def english(text: String) = text.startsWith("English") || text.startsWith("english")
+
   def yes (text:String) = text.startsWith("да") || text.startsWith("yes")
   def no(text:String) = text.startsWith("нет") || text.startsWith("no")
 }
@@ -30,15 +49,6 @@ object Phrase {
 
   def russian (text:String, vars:Any*)(implicit locale: BotLocale) = phraseCase(text, vars:_*)(Russian)
   def english (text:String, vars:Any*)(implicit locale: BotLocale) = phraseCase(text, vars:_*)(English)
-  /*
-  def russian(text:String, vars:Any*)(implicit locale: BotLocale)
-    :PartialFunction[BotLocale, String] =
-    {case locale if locale == Russian => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
-
-  def english(text:String, vars:Any*)(implicit locale: BotLocale)
-    :PartialFunction[BotLocale, String] =
-    {case locale if locale == English => String.format(text, vars.map(_.asInstanceOf[AnyRef]): _*)}
-  */
 
   def russianArray(text:String*)(implicit locale: BotLocale)
     :PartialFunction[BotLocale, Array[String]] =
@@ -137,4 +147,9 @@ object Phrase {
     english(s"Master, you smoke $smoked cigarettes overall"),
     russian(s"Хозяин, вы выкурили всего $smoked сигарет")
   )
+
+  def englishRussian: Array[String] = Array("English", "Русский")
+
+  def changeLocale: String = "Choose locale / выберите язык"
+
 }

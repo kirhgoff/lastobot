@@ -15,6 +15,7 @@ case class UserTextMessage(msg:Message) extends UserMessages
 //received commands
 object Command {
   final case class Start()
+  final case class ChangeLocale()
   final case class Obey()
   final case class Eat()
   final case class Abuse()
@@ -42,6 +43,7 @@ case object Serving extends State
 case object Abusing extends State
 case object ConfirmingSmoke extends State
 case object ShowingStats extends State
+case object ChangingLocale extends State
 
 //data
 sealed trait Data
@@ -51,6 +53,8 @@ case object No extends Data
 case object What extends Data
 final case class UserSaid(text:String) extends Data
 final case class UserSmoked(count:Int) extends Data
+final case class UserChangedLocale(locale:BotLocale) extends Data
+
 
 /**
   * Created by kirilllastovirya on 26/04/2016.
@@ -85,6 +89,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       sender() ! Text(senderId, intro)
       stay
     }
+    case Event(Command.ChangeLocale, _) => goto(ChangingLocale)
   }
 
   when(ShowingStats) {
@@ -101,6 +106,15 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       goto(Serving) using Yes
     case Event(UserSaid(text), _) if Recognizer.no(text) =>
       goto(Serving) using No
+    case _ =>
+      goto(Serving) using What
+  }
+
+  when(ChangingLocale) {
+    case Event(UserSaid(text), _) if Recognizer.english(text) =>
+      goto(Serving) using UserChangedLocale(English)
+    case Event(UserSaid(text), _) if Recognizer.russian(text) =>
+      goto(Serving) using UserChangedLocale(Russian)
     case _ =>
       goto(Serving) using What
   }
@@ -125,11 +139,22 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
         }
         case _ => sender() ! Text(senderId, what)
       }
-      case _ => sender() ! Text(senderId, cancelled(locale))
+      case _ => sender() ! Text(senderId, cancelled)
     }
     case Serving -> ShowingStats => {
       val smoked = userStorage.smokedOverall()
       sender() ! Text(senderId, smokedOverall(smoked))
+    }
+    // Locale Changing
+    case Serving -> ChangingLocale => nextStateData match {
+      case UserChangedLocale(count) =>
+        sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
+      case other => println("wrong state Serving -> ChangingLocale: " + other)
+    }
+    case ChangingLocale -> Serving => nextStateData match {
+      case UserChangedLocale(newLocale) =>
+        locale = userStorage.updateLocale(newLocale)
+      case other => println("wrong state ChangingLocale -> Serving: " + other)
     }
   }
 

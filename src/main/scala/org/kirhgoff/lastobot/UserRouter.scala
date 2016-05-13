@@ -27,6 +27,7 @@ class UserRouter(val bot:TelegramBot) extends Actor {
       case "smoke" => userActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
       case "stats" => userActor (sender) ! Command.SmokingStats
       case "start" => userActor (sender) ! Command.Start
+      case "setlocale" => userActor (sender) ! Command.ChangeLocale
       case any => println("Unknown command " + any)
     }
     case UserTextMessage(msg:Message) => {
