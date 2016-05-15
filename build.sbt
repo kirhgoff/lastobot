@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
     "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
     "org.mongodb" %% "casbah" % "3.1.1"
+
 )
 
 // Compiler settings. Use scalac -X for other options and their description.
