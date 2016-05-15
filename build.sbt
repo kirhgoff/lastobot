@@ -6,7 +6,7 @@ organization := "org.kirhgoff"
 
 scalaVersion := "2.11.8"
 
-//crossScalaVersions := Seq("2.10.5", "2.11.7")
+crossScalaVersions := Seq(scalaVersion.value)
 
 //resolvers += "Local Maven Repository" at "http://eif-repository.moex.com/nexus/content/repositories/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
     "org.apache.commons" % "commons-lang3" % "3.4",
     "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4",
     "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
-    "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT",
+    "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
     "org.mongodb" %% "casbah" % "3.1.1"
 )
 
