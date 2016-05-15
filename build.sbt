@@ -2,11 +2,11 @@ name := "lastobot"
 
 organization := "org.kirhgoff"
 
-version := "1.0"
+//version := "1.0"
 
 scalaVersion := "2.11.8"
 
-crossScalaVersions := Seq("2.10.5", "2.11.7")
+//crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 //resolvers += "Local Maven Repository" at "http://eif-repository.moex.com/nexus/content/repositories/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -30,6 +30,20 @@ scalacOptions ++= List("-feature","-deprecation", "-unchecked", "-Xlint")
 
 javaOptions += "-Xmx4G"
 
-enablePlugins(JavaAppPackaging)
-
 mainClass in Compile := Some("org.kirhgoff.lastobot.LastobotApp")
+
+sbtPlugin := true
+
+publishMavenStyle := false
+
+// Release
+import ReleaseTransformations._
+releaseProcess := Seq[ReleaseStep](
+    inquireVersions,                        // : ReleaseStep
+    setReleaseVersion,                      // : ReleaseStep
+    commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
+    tagRelease,                             // : ReleaseStep
+    setNextVersion,                         // : ReleaseStep
+    commitNextVersion,                      // : ReleaseStep
+    pushChanges                             // : ReleaseStep, also checks that an upstream branch is properly configured
+)
