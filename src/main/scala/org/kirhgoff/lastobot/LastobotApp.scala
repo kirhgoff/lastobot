@@ -1,18 +1,19 @@
 package org.kirhgoff.lastobot
 
-import akka.actor.{ActorSystem, Props, ActorRef}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import info.mukel.telegram.bots.api.{Message, ReplyKeyboardMarkup, ReplyMarkup}
 import info.mukel.telegram.bots.{Commands, Polling, TelegramBot, Utils}
-
 import info.mukel.telegram.bots.OptionPimps._
+
+import scala.io.Source
 
 /**
   * Created by kirilllastovirya on 22/04/2016.
   */
 class LastobotApp(token:String) extends TelegramBot(token)
   with Polling with Commands {
-
   val system  = ActorSystem(s"Lastobot")
+
   var userRouter = system.actorOf(Props(new UserRouter(this)),
     name = "userRouter")
 
