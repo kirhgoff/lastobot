@@ -2,11 +2,10 @@ package org.kirhgoff.lastobot
 
 
 import java.util.Objects
-import java.util.Arrays
 
 import akka.actor.FSM
 import info.mukel.telegram.bots.api.Message
-import org.apache.commons.lang3.ArrayUtils
+import org.kirhgoff.lastobot.Phrase._
 
 //What Telegram bot receives
 trait UserMessages
@@ -15,6 +14,8 @@ case class UserTextMessage(msg:Message) extends UserMessages
 
 //received commands
 object Command {
+  final case class Start()
+  final case class ChangeLocale()
   final case class Obey()
   final case class Eat()
   final case class Abuse()
@@ -42,6 +43,7 @@ case object Serving extends State
 case object Abusing extends State
 case object ConfirmingSmoke extends State
 case object ShowingStats extends State
+case object ChangingLocale extends State
 
 //data
 sealed trait Data
@@ -51,38 +53,43 @@ case object No extends Data
 case object What extends Data
 final case class UserSaid(text:String) extends Data
 final case class UserSmoked(count:Int) extends Data
+final case class UserChangedLocale(locale:BotLocale) extends Data
+
 
 /**
   * Created by kirilllastovirya on 26/04/2016.
   */
-class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] {
+class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] {
 
-  //TODO add language setting
+  //By default bot is english
+  //TODO make it implicit
+  implicit var locale:BotLocale = userStorage.getLocaleOr(English)
 
   startWith(Serving, Empty)
 
   when(Serving) {
     case Event(Command.Obey, _) => {
-      sender() ! Text(senderId, "Yes, my master!")
+      sender() ! Text(senderId, obey)
       stay
     }
     case Event(Command.Eat, _) => {
-      println("Bot receieved Eat")
-      //TODO use i18n
-      sender() ! Keyboard(senderId,
-        "What food may I serve you, my master?",
-        Array(Array("bread", "butter", "beer")))
+      sender() ! Keyboard(senderId, whatFoodToServe,
+        Array(foodChoices))
       stay
     }
-    case Event(Command.Abuse, _) => {
+    case Event(Command.Abuse, _) =>
       sender() ! Keyboard(senderId,
-        "Скажи \"да\"",
-        Array(Array("да", "нет")))
+        sayYes,
+        Array(Phrase.yesNo))
       goto(Abusing)
-    }
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
+    case Event(Command.Start, _) => {
+      sender() ! Text(senderId, intro)
+      stay
+    }
+    case Event(Command.ChangeLocale, _) => goto(ChangingLocale)
   }
 
   when(ShowingStats) {
@@ -95,40 +102,59 @@ class Lastobot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   when(ConfirmingSmoke) {
-    case Event(UserSaid(text), _) if text.startsWith("да") =>
+    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
       goto(Serving) using Yes
-    case Event(UserSaid(text), _) if text.startsWith("нет") =>
+    case Event(UserSaid(text), _) if Recognizer.no(text) =>
       goto(Serving) using No
     case _ =>
       goto(Serving) using What
+  }
 
+  when(ChangingLocale) {
+    case Event(UserSaid(text), _) if Recognizer.english(text) =>
+      goto(Serving) using UserChangedLocale(English)
+    case Event(UserSaid(text), _) if Recognizer.russian(text) =>
+      goto(Serving) using UserChangedLocale(Russian)
+    case _ =>
+      goto(Serving) using What
   }
 
   onTransition {
     case Abusing -> Serving => nextStateData match {
-      case UserSaid(text) if text.startsWith("да") =>
-        sender() ! Text(senderId, "Манда!")
+      case UserSaid(text) if Recognizer.yes(text) =>
+        sender() ! Text(senderId, abuseReply(locale))
+      case _ =>
     }
     case Serving -> ConfirmingSmoke => nextStateData match {
       case UserSmoked(count) => sender() ! Keyboard(senderId,
-        s"Вы выкурили $count сигарет(у)?",
-        Array(Array("да", "нет")))
+        youSmokeQuestion(count),
+        Array(yesNo(locale)))
       case _ =>
     }
     case ConfirmingSmoke -> Serving => nextStateData match {
       case Yes => stateData match {
         case UserSmoked(count) => {
           userStorage.smoked(count)
-          sender() ! Text(senderId, s"Done, you smoked $count cigarettes, master")
+          sender() ! Text(senderId, youSmokeConfirmed(count))
         }
-        case _ => sender() ! Text(senderId, s"You got me confused")
+        case _ => sender() ! Text(senderId, what)
       }
-      case _ => sender() ! Text(senderId, "OK, cancelled.")
+      case _ => sender() ! Text(senderId, cancelled)
     }
     case Serving -> ShowingStats => {
-      println("ShowingStats -> Serving")
       val smoked = userStorage.smokedOverall()
-      sender() ! Text(senderId, s"Master, you smoke $smoked cigarettes overall")
+      sender() ! Text(senderId, smokedOverall(smoked))
+    }
+    // Locale Changing
+    case Serving -> ChangingLocale => nextStateData match {
+      case UserChangedLocale(count) =>
+        sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
+      case other => println("wrong state Serving -> ChangingLocale: " + other)
+    }
+    case ChangingLocale -> Serving => nextStateData match {
+      case UserChangedLocale(newLocale) =>
+        locale = userStorage.updateLocale(newLocale)
+      case other => println("wrong state ChangingLocale -> Serving: " + other)
     }
   }
 

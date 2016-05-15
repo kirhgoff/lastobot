@@ -19,6 +19,31 @@ class StorageBotFactory(val databaseHost:String, val databasePort:Int) {
 
 //TODO Implement actor to perform db actions
 class UserStorage(val db:MongoDB) {
+  def updateLocale(newLocale: BotLocale): BotLocale = {
+    val collection = db("user_preferences")
+    //collection.insert(MongoDBObject("_id"->"locale", "value" -> newLocale.toString))
+    collection.update(
+      MongoDBObject("_id"->"locale"),
+      MongoDBObject("value"->newLocale.toString),
+      upsert = true
+    )
+    getLocaleOr(newLocale)
+  }
+
+  def getLocaleOr(defaultLocale: BotLocale): BotLocale =  {
+    val collection = db("user_preferences")
+    collection.findOneByID("locale") match {
+      case Some(pref) => {
+        val localeString: String = pref.get("value").asInstanceOf[String]
+        BotLocale(localeString)
+      }
+      case None => {
+        println("Found no locale, returning: " + defaultLocale)
+        defaultLocale
+      }
+    }
+  }
+
   val smokes = db("smokes")
   def smoked(count:Int) = {
     smokes.insert(MongoDBObject("count" -> count, "date" -> new Date))
@@ -44,14 +69,23 @@ object Test {
   def main(args: Array[String]): Unit = {
     val mongoClient = MongoClient("localhost", 27017)
     val db = mongoClient("sender_3")
-    val collection = db("smokes")
-    for (i <- 1 to 10) collection.insert(MongoDBObject("count"->1, "date" -> new Date))
-    val totals = collection.aggregate(List(MongoDBObject("$group" ->
-      MongoDBObject("_id" -> null,
-        "total" -> MongoDBObject("$sum" -> "$count")
-      )
-    )))
-    println(totals.results)
-    println(totals.results.head("total"))
+    val userStorage = new UserStorage(db)
+    var locale = userStorage.getLocaleOr(English)
+    println("1:" + locale)
+
+    locale = userStorage.updateLocale(Russian)
+    println("2:" + locale)
+
+    locale = userStorage.updateLocale(English)
+    println("3:" + locale)
+  }
+
+  def main2(args: Array[String]): Unit = {
+    val mongoClient = MongoClient("localhost", 27017)
+    val db = mongoClient("sender_3")
+    val collection = db("user_preferences")
+    //collection.insert(MongoDBObject("_id"->"locale", "value" -> "english"))
+    val locale = collection.findOneByID("locale").get("value")
+    println(locale)
   }
 }

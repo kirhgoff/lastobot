@@ -9,7 +9,7 @@ import info.mukel.telegram.bots.OptionPimps._
 /**
   * Created by kirilllastovirya on 22/04/2016.
   */
-class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovirya/lastobot.token"))
+class LastobotApp(token:String) extends TelegramBot(token)
   with Polling with Commands {
 
   val system  = ActorSystem(s"Lastobot")
@@ -17,7 +17,7 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
     name = "userRouter")
 
   val states = {
-    List("eat", "obey", "abuse", "smoke", "stats").foreach(
+    List("start", "eat", "obey", "abuse", "smoke", "stats").foreach(
       c  => on(c) { (sender, args) => {
           println(s"Sending user command: $c")
           userRouter ! UserCommand(sender, c, args)
@@ -35,8 +35,8 @@ class LastobotApp extends TelegramBot(Utils.tokenFromFile("/Users/kirilllastovir
 
 object LastobotApp {
   def main(args: Array[String]): Unit = {
-    println("lastobot is running")
-    val app: LastobotApp = new LastobotApp()
+    println("lastobot v1.0 is running")
+    val app: LastobotApp = new LastobotApp(Utils.tokenFromFile(args(0)))
     app.run
     //TODO how to terminate correctly
     app.terminate
