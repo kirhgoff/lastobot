@@ -1,2 +1,4 @@
 #!/bin/bash
-java -Xmx256M -cp "../lib/*" org.kirhgoff.lastobot.LastobotApp
+JAVA_OPTS="-Xmx256M"
+GC_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -Xloggc:../logs/gc.log"
+nohup java $GC_OPTS $JAVA_OPTS -cp "../lib/*" org.kirhgoff.lastobot.LastobotApp > ../logs/stdout.log 2>&1 &
