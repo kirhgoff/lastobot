@@ -1,3 +1,5 @@
+enablePlugins(JavaAppPackaging)
+
 name := "lastobot"
 
 organization := "org.kirhgoff"
@@ -22,7 +24,7 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
     "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
     "org.mongodb" %% "casbah" % "3.1.1"
-
+    //"org.json4s" % "json4s-native_2.10" % "3.3.0"
 )
 
 // Compiler settings. Use scalac -X for other options and their description.
@@ -34,8 +36,6 @@ javaOptions += "-Xmx4G"
 mainClass in Compile := Some("org.kirhgoff.lastobot.LastobotApp")
 
 sbtPlugin := true
-
-publishMavenStyle := false
 
 // Release
 import ReleaseTransformations._

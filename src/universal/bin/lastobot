@@ -1,0 +1,2 @@
+#!/bin/bash
+java -Xmx256M -cp "../lib/*" org.kirhgoff.lastobot.LastobotApp
