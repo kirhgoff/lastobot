@@ -2,6 +2,8 @@ package org.kirhgoff.lastobot
 
 import java.util.Random
 
+import com.typesafe.scalalogging.LazyLogging
+
 /**
   * Created by kirilllastovirya on 5/05/2016.
   */
@@ -14,12 +16,12 @@ case object English extends BotLocale {
   override def toString = "English"
 }
 
-object BotLocale {
+object BotLocale extends LazyLogging {
   def apply(value:String): BotLocale = value match {
     case "Russian" => Russian
     case "English" => English
     case other => {
-      println("Incorrect locale value:" + other)
+      logger.error(s"Incorrect locale value:$other")
       English
     }
   }

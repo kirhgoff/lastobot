@@ -1,9 +1,9 @@
 package org.kirhgoff.lastobot
 
-
 import java.util.Objects
 
 import akka.actor.FSM
+import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.api.Message
 import org.kirhgoff.lastobot.Phrase._
 
@@ -59,10 +59,9 @@ final case class UserChangedLocale(locale:BotLocale) extends Data
 /**
   * Created by kirilllastovirya on 26/04/2016.
   */
-class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] {
+class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] with LazyLogging {
 
   //By default bot is english
-  //TODO make it implicit
   implicit var locale:BotLocale = userStorage.getLocaleOr(English)
 
   startWith(Serving, Empty)
@@ -149,12 +148,12 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
     case Serving -> ChangingLocale => nextStateData match {
       case UserChangedLocale(count) =>
         sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
-      case other => println("wrong state Serving -> ChangingLocale: " + other)
+      case other => logger.error(s"wrong state Serving -> ChangingLocale: $other")
     }
     case ChangingLocale -> Serving => nextStateData match {
       case UserChangedLocale(newLocale) =>
         locale = userStorage.updateLocale(newLocale)
-      case other => println("wrong state ChangingLocale -> Serving: " + other)
+      case other => logger.error(s"wrong state ChangingLocale -> Serving: $other")
     }
   }
 

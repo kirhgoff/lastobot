@@ -1,7 +1,8 @@
 package org.kirhgoff.lastobot
 
-import java.time.{LocalDate, ZoneId}
-import java.util.{Date, Observer}
+import java.util.Date
+
+import com.typesafe.scalalogging.LazyLogging
 
 // Imports core, which grabs everything including Query DSL
 import com.mongodb.casbah.Imports._
@@ -18,7 +19,7 @@ class StorageBotFactory(val databaseHost:String, val databasePort:Int) {
 }
 
 //TODO Implement actor to perform db actions
-class UserStorage(val db:MongoDB) {
+class UserStorage(val db:MongoDB) extends LazyLogging {
   def updateLocale(newLocale: BotLocale): BotLocale = {
     val collection = db("user_preferences")
     //collection.insert(MongoDBObject("_id"->"locale", "value" -> newLocale.toString))
@@ -38,7 +39,7 @@ class UserStorage(val db:MongoDB) {
         BotLocale(localeString)
       }
       case None => {
-        println("Found no locale, returning: " + defaultLocale)
+        logger.error(s"Found no locale, falling back: $defaultLocale")
         defaultLocale
       }
     }
