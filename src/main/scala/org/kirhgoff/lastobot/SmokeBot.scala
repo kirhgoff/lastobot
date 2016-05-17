@@ -12,18 +12,15 @@ trait UserMessages
 case class UserCommand(sender:Int, commandName:String, args:Seq[String]) extends UserMessages
 case class UserTextMessage(msg:Message) extends UserMessages
 
-//received commands
+//What commands bot processes
 object Command {
   final case class Start()
   final case class ChangeLocale()
-  final case class Obey()
-  final case class Eat()
-  final case class Abuse()
   final case class Smoke(count:Int)
   final case class SmokingStats()
 }
 
-//Feedback messages
+//What it sends back
 final case class Text(sender:Int, text:String)
 final case class Keyboard(sender:Int, text:String, buttons:Array[Array[String]]) {
   override def equals(other: Any) = other match {
@@ -40,7 +37,6 @@ final case class Keyboard(sender:Int, text:String, buttons:Array[Array[String]])
 //states
 sealed trait State
 case object Serving extends State
-case object Abusing extends State
 case object ConfirmingSmoke extends State
 case object ShowingStats extends State
 case object ChangingLocale extends State
@@ -67,36 +63,16 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   startWith(Serving, Empty)
 
   when(Serving) {
-    case Event(Command.Obey, _) => {
-      sender() ! Text(senderId, obey)
-      stay
-    }
-    case Event(Command.Eat, _) => {
-      sender() ! Keyboard(senderId, whatFoodToServe,
-        Array(foodChoices))
-      stay
-    }
-    case Event(Command.Abuse, _) =>
-      sender() ! Keyboard(senderId,
-        sayYes,
-        Array(Phrase.yesNo))
-      goto(Abusing)
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(Command.SmokingStats, _) => goto(ShowingStats)
     case Event(UserSaid(text), _) => goto(Serving)
-    case Event(Command.Start, _) => {
+    case Event(Command.Start, _) =>
       sender() ! Text(senderId, intro)
       stay
-    }
     case Event(Command.ChangeLocale, _) => goto(ChangingLocale)
   }
 
   when(ShowingStats) {
-    case _ => goto(Serving)
-  }
-
-  when(Abusing) {
-    case Event(UserSaid(text), Empty) => goto(Serving) using UserSaid(text)
     case _ => goto(Serving)
   }
 
@@ -119,11 +95,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   onTransition {
-    case Abusing -> Serving => nextStateData match {
-      case UserSaid(text) if Recognizer.yes(text) =>
-        sender() ! Text(senderId, abuseReply(locale))
-      case _ =>
-    }
+    //------------------------------ Smoking ------------------------------
     case Serving -> ConfirmingSmoke => nextStateData match {
       case UserSmoked(count) => sender() ! Keyboard(senderId,
         youSmokeQuestion(count),
@@ -140,11 +112,12 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       }
       case _ => sender() ! Text(senderId, cancelled)
     }
+    //------------------------------ Stats ------------------------------
     case Serving -> ShowingStats => {
       val smoked = userStorage.smokedOverall()
       sender() ! Text(senderId, smokedOverall(smoked))
     }
-    // Locale Changing
+    //------------------------------ Locale ------------------------------
     case Serving -> ChangingLocale => nextStateData match {
       case UserChangedLocale(count) =>
         sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))

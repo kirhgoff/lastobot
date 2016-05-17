@@ -19,10 +19,8 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
   val storageFactory = new StorageBotFactory ("localhost", 27017)
 
   override def receive: Receive = {
+    //TODO move out command constants
     case UserCommand(sender, commandName, args) ⇒ commandName match {
-      case "obey" => userActor (sender) ! Command.Obey
-      case "eat" => userActor (sender) ! Command.Eat
-      case "abuse" => userActor (sender) ! Command.Abuse
         //TODO proper int parsing
       case "smoke" => userActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
       case "stats" => userActor (sender) ! Command.SmokingStats
@@ -55,5 +53,5 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
     )
   }
 
-  override def postStop() = storageFactory.close
+  override def postStop() = storageFactory.close()
 }

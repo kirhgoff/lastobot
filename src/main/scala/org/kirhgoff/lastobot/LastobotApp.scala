@@ -1,12 +1,9 @@
 package org.kirhgoff.lastobot
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorSystem, Props}
 import com.typesafe.scalalogging.LazyLogging
-import info.mukel.telegram.bots.api.{Message, ReplyKeyboardMarkup, ReplyMarkup}
+import info.mukel.telegram.bots.api.Message
 import info.mukel.telegram.bots.{Commands, Polling, TelegramBot, Utils}
-import info.mukel.telegram.bots.OptionPimps._
-
-import scala.io.Source
 
 /**
   * Created by kirilllastovirya on 22/04/2016.
@@ -18,8 +15,9 @@ class LastobotApp(token:String) extends TelegramBot(token)
   var userRouter = system.actorOf(Props(new UserRouter(this)),
     name = "userRouter")
 
+  //TODO move strings to Commands object
   val states = {
-    List("start", "eat", "obey", "abuse", "smoke", "stats").foreach(
+    List("start", "smoke", "stats", "setlocale").foreach(
       c  => on(c) { (sender, args) => {
           logger.info(s"Sending user command: $c")
           userRouter ! UserCommand(sender, c, args)
