@@ -5,3 +5,5 @@ fi
 VERSION=$1
 echo "Deploying version: $VERSION"
 scp ./target/universal/lastobot-$VERSION.tgz lastobot:/deploy
+ssh lastobot
+cd ~/deploy/

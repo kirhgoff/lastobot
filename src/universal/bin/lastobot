@@ -1,4 +1,7 @@
 #!/bin/bash
-JAVA_OPTS="-Xmx256M"
-GC_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -Xloggc:../logs/gc.log"
-nohup java $GC_OPTS $JAVA_OPTS -cp "../lib/*" org.kirhgoff.lastobot.LastobotApp > ../logs/stdout.log 2>&1 &
+INSTANCE_ID=lastobot
+MAIN_CLASS=org.kirhgoff.lastobot.LastobotApp
+MEM_OPTS="-Xmx256M -Xms256M"
+JAVA_HOME=$JAVA_HOME
+JMX_PORT=0
+source $(dirname "$0")/common.sh
