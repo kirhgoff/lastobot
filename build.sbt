@@ -26,7 +26,9 @@ libraryDependencies ++= Seq(
   "org.mongodb" %% "casbah" % "3.1.1",
   "org.json4s" % "json4s-native_2.10" % "3.3.0",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
-  "ch.qos.logback" % "logback-classic" % "1.1.2"
+  "ch.qos.logback" % "logback-classic" % "1.1.2",
+  "com.github.wookietreiber" % "scala-chart_2.11" % "0.5.0",
+  "com.itextpdf" % "itextpdf" % "5.5.9"
 )
 
 // Compiler settings. Use scalac -X for other options and their description.

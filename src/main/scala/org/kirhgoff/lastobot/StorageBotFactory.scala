@@ -66,7 +66,7 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
 }
 
 
-object Test {
+object MongoTest {
   def main(args: Array[String]): Unit = {
     val mongoClient = MongoClient("localhost", 27017)
     val db = mongoClient("sender_3")
