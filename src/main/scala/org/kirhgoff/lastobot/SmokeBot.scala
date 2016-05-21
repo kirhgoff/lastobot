@@ -1,5 +1,6 @@
 package org.kirhgoff.lastobot
 
+import java.time.LocalDate
 import java.util.Objects
 
 import akka.actor.FSM
@@ -33,6 +34,7 @@ final case class Keyboard(sender:Int, text:String, buttons:Array[Array[String]])
     s"Keyboard for $sender text=($text) buttons=${buttons.deep.mkString}"
 
 }
+final case class Picture(sender:Int, filePath:String)
 
 //states
 sealed trait State
@@ -114,8 +116,17 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
     }
     //------------------------------ Stats ------------------------------
     case Serving -> ShowingStats => {
-      val smoked = userStorage.smokedOverall()
-      sender() ! Text(senderId, smokedOverall(smoked))
+      val monthlyFilePath:String = ChartsBuilder.monthlyFile(
+        userStorage.aggregatedByDateBefore(
+          LocalDate.now.minusDays(30)
+        ))
+      sender() ! Picture(senderId, monthlyFilePath)
+
+      val weeklyFilePath:String = ChartsBuilder.weeklyFile(
+        userStorage.aggregatedByDateBefore(
+          LocalDate.now.minusDays(7)
+      ))
+      sender() ! Picture(senderId, weeklyFilePath)
     }
     //------------------------------ Locale ------------------------------
     case Serving -> ChangingLocale => nextStateData match {

@@ -1,5 +1,7 @@
 package org.kirhgoff.lastobot
 
+import java.io.File
+import java.nio.file.Files
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util
@@ -17,10 +19,6 @@ import scala.util.Random
 /**
   * Created by kirilllastovirya on 19/05/2016.
   */
-class ChartActor {
-
-}
-
 object ChartTest extends {
 
   //http://knowm.org/open-source/xchart/xchart-example-code/
@@ -35,24 +33,37 @@ object ChartTest extends {
     val dots = (for (x <- 1 to 5; y = random.nextInt(30))
       yield (x.toDouble, y.toDouble)).toList
 
-    val chart: XYChart = ScalaCharts.monthlyCigarettesChart(dots)
-
+    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(dots)
     BitmapEncoder.saveBitmap(chart, "/tmp/chart", BitmapFormat.PNG)
   }
 
 }
 
-object ScalaCharts extends scalax.chart.module.Charting {
+object ChartsBuilder extends scalax.chart.module.Charting {
   import scala.collection.JavaConverters._
 
-  implicit def doubleListToJavaNumberList(list: List[Double]): util.List[Number] = {
+  implicit def doubleListToJavaNumberList(list: List[Double]): util.List[Number] =
     list.map(_.asInstanceOf[Number]).asJava
+
+  implicit def stringListToJavaStringList(list: List[String]): util.List[String] = list.asJava
+
+  def monthlyFile(data: List[(Long, Double)]): String = {
+    val filePath = createTempFile
+    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(
+      data.map {case (x, y) => (x.toDouble, y)}
+    )
+    BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
+    filePath
   }
 
-  implicit def stringListToJavaStringList(list: List[String]): util.List[String] = {
-    list.asJava
+  def weeklyFile(data: List[(Long, Double)]): String = {
+    val filePath = createTempFile
+    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(
+      data.map {case (x, y) => (x.toDouble, y)}
+    )
+    BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
+    filePath
   }
-
 
   def monthlyCigarettesChart(dots:List[(Double, Double)]): XYChart = {
     val (days: List[Double], values: List[Double]) = dots.unzip
@@ -116,4 +127,9 @@ object ScalaCharts extends scalax.chart.module.Charting {
 
     chart
   }
+
+  def createTempFile: String = {
+    Files.createTempFile("bot", "_" + System.nanoTime()).toAbsolutePath.toString
+  }
+
 }

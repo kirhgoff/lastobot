@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.OptionPimps._
 import info.mukel.telegram.bots.TelegramBot
-import info.mukel.telegram.bots.api.{Message, ReplyKeyboardMarkup, ReplyMarkup}
+import info.mukel.telegram.bots.api.{InputFile, Message, ReplyKeyboardMarkup, ReplyMarkup}
 
 import scala.collection.mutable
 
@@ -43,6 +43,9 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
         oneTimeKeyboard = true
       )
       bot.sendMessage(sender, text, None, None, None, Option(keyboard))
+    }
+    case Picture(sender:Int, filePath:String) => {
+      bot.sendPhoto(sender, InputFile(filePath))
     }
   }
 
