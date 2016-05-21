@@ -5,14 +5,15 @@ package org.kirhgoff.lastobot
   */
 object StatsCalculator {
   //http://hotmath.com/hotmath_help/topics/line-of-best-fit.html
-  def bestFit (valuesY:List[Double]):Double = {
-    val n = valuesY.length
+  def bestFit (values:List[(Long, Double)]):(Double, Double) = {
+    val n = values.length
     //we start from one
-    val valuesX = 1 to n
-    val meanX = valuesY.sum / n
-    val meanY = n * (n + 1) / 2
+    val (overallX, overallY) = values.foldLeft((0d, 0d)) { case ((accX, accY), (x, y)) => (accX + x, accY + y)}
+    val (meanX, meanY) = (overallX/n, overallY/n)
 
-    val squares = valuesX.map(x => (x - meanX) * (x - meanX)).sum
-    (valuesX, valuesY).zipped.map((x, y) => (x - meanX) * (y - meanY)).sum / squares
+    val squares = values.map {case (x, _) => (x - meanX) * (x - meanX)}.sum
+    val slope = values.map { case(x, y) => (x - meanX) * (y - meanY)}.sum / squares
+    val shift = meanY - slope*meanX
+    (slope, shift)
   }
 }

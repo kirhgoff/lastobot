@@ -8,6 +8,7 @@ import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
   * Created by kirilllastovirya on 13/05/2016.
   */
 class UserStorageTest  extends Matchers with FreeSpecLike  with BeforeAndAfterAll{
+  import DateConversions._
   val userStorage = new StorageBotFactory("localhost", 27017).userStorageFor(666)
 
   override def afterAll(): Unit = {
@@ -21,18 +22,17 @@ class UserStorageTest  extends Matchers with FreeSpecLike  with BeforeAndAfterAl
       userStorage.getLocaleOr(English) should equal(Russian)
       userStorage.updateLocale(English) should equal(English)
     }
-  }
 
-  "UserStorage" - {
     "should be able to give raw data" in {
       //3, 2, 1
-      List(19, 18, 18).foreach(
+      List(19, 18, 18, 17, 17, 17).foreach(
         day => userStorage.smoked(1, LocalDate.of(2016, 5, day))
       )
-
-      userStorage.getRawData() should equal(Map(
-        LocalDate.of(2016, 5, 19) -> 1,
-        LocalDate.of(2016, 5, 18) -> 2
+      val checkDate = LocalDate.of(2016, 5, 18)
+      val epochDate = checkDate.toEpochDay
+      userStorage.aggregatedByDateBefore(checkDate) should equal(List(
+        (epochDate + 1, 1d),
+        (epochDate, 2d)
       ))
     }
   }

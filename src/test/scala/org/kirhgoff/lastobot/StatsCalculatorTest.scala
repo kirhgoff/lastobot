@@ -8,8 +8,8 @@ import org.scalatest.{FreeSpecLike, Matchers}
 class StatsCalculatorTest extends Matchers with FreeSpecLike {
     "StatsCalculator" - {
       "should be able to calculate best fit" in {
-        StatsCalculator.bestFit(List(1, 2, 3)) should equal(1)
-        StatsCalculator.bestFit(List(3, 2, 1)) should equal(-1)
+        StatsCalculator.bestFit(List((1L, 1d), (2L, 2d), (3L, 3d))) should equal(1d, 0d)
+        StatsCalculator.bestFit(List((1L, 3d), (2L, 2d), (3L, 1d))) should equal(-1d, 4d)
       }
     }
 }
