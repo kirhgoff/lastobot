@@ -16,4 +16,9 @@ object StatsCalculator {
     val shift = meanY - slope*meanX
     (slope, shift)
   }
+
+  def minMax(values: List[Double]): (Double, Double) = values
+    .foldLeft((values.head, values.head)) {
+      case ((min, max), e) => (math.min(min, e), math.max(max, e))
+    }
 }

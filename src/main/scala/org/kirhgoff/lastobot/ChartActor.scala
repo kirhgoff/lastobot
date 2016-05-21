@@ -42,6 +42,10 @@ object ChartTest extends {
 object ScalaCharts extends scalax.chart.module.Charting {
   import scala.collection.JavaConverters._
 
+  implicit def listToJava(list: List[Double]): util.List[Number] = {
+    list.map(_.asInstanceOf[Number]).asJava
+  }
+
   def monthlyCigarettesChart(dots:List[(Double, Double)]): XYChart = {
     val (days: List[Double], values: List[Double]) = dots.unzip
 
@@ -80,17 +84,6 @@ object ScalaCharts extends scalax.chart.module.Charting {
     chart
   }
 
-  def minMax(days: List[Double]): (Double, Double) = {
-    val (xStart, xEnd) = days.foldLeft((days.head, days.head)) {
-      case ((min, max), e) => (math.min(min, e), math.max(max, e))
-    }
-    (xStart, xEnd)
-  }
-
-  implicit def listToJava(list: List[Double]): util.List[Number] = {
-    list.map(_.asInstanceOf[Number]).asJava
-  }
-
   def weeklyCigarettesChart(days: List[String], values: List[Double]): CategoryChart = {
     //TODO weird import issue - move out from the method
     //TODO use i18n
@@ -107,19 +100,8 @@ object ScalaCharts extends scalax.chart.module.Charting {
     chart.getStyler.setPlotContentSize(1.0)
     chart.getStyler.setYAxisDecimalPattern("###.#")
 
-    createSeries(chart, "cigarettes", days, values)
-  }
+    chart.addSeries("weekly", days, values)
 
-  def createSeries(chart: CategoryChart, label: String, keys: List[String], values: List[Double]): CategoryChart = {
-    val daysJava = keys.asJava
-    val valuesJava: util.List[Number] = values.map(x => x.asInstanceOf[Number]).asJava
-    chart.addSeries(label, daysJava, valuesJava)
     chart
-  }
-
-  def lineChart(): Unit = {
-    val data = for (i <- 1 to 5) yield (i, i)
-    val chart = XYLineChart(data)
-    chart.saveAsPNG("/tmp/chart.png")
   }
 }
