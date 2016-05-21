@@ -113,32 +113,7 @@ object MongoTest {
     val mongoClient = MongoClient("localhost", 27017)
     val db = mongoClient("sender_3")
     val userStorage = new UserStorage(db)
-//    List(19, 18, 18, 17, 17, 17).foreach(
-//      day => userStorage.smoked(1, LocalDate.of(2016, 5, day))
-//    )
-    println(userStorage.aggregatedByDateBefore(LocalDate.of(2016, 5, 18)))
-  }
-
-  def main3(args: Array[String]): Unit = {
-    val mongoClient = MongoClient("localhost", 27017)
-    val db = mongoClient("sender_3")
-    val userStorage = new UserStorage(db)
-    var locale = userStorage.getLocaleOr(English)
-    println("1:" + locale)
-
-    locale = userStorage.updateLocale(Russian)
-    println("2:" + locale)
-
-    locale = userStorage.updateLocale(English)
-    println("3:" + locale)
-  }
-
-  def main2(args: Array[String]): Unit = {
-    val mongoClient = MongoClient("localhost", 27017)
-    val db = mongoClient("sender_3")
-    val collection = db("user_preferences")
-    //collection.insert(MongoDBObject("_id"->"locale", "value" -> "english"))
-    val locale = collection.findOneByID("locale").get("value")
-    println(locale)
+    val results = userStorage.aggregatedByDateBefore(LocalDate.of(2016, 5, 18))
+    println(results)
   }
 }
