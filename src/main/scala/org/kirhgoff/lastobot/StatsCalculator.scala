@@ -5,7 +5,7 @@ package org.kirhgoff.lastobot
   */
 object StatsCalculator {
   //http://hotmath.com/hotmath_help/topics/line-of-best-fit.html
-  def bestFit (values:List[(Long, Double)]):(Double, Double) = {
+  def bestFit (values:List[(Double, Double)]):(Double, Double) = {
     val n = values.length
     //we start from one
     val (overallX, overallY) = values.foldLeft((0d, 0d)) { case ((accX, accY), (x, y)) => (accX + x, accY + y)}
