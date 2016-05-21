@@ -1,5 +1,7 @@
 package org.kirhgoff.lastobot
 
+import java.time.LocalDate
+
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 /**
@@ -20,4 +22,19 @@ class UserStorageTest  extends Matchers with FreeSpecLike  with BeforeAndAfterAl
       userStorage.updateLocale(English) should equal(English)
     }
   }
+
+  "UserStorage" - {
+    "should be able to give raw data" in {
+      //3, 2, 1
+      List(19, 18, 18).foreach(
+        day => userStorage.smoked(1, LocalDate.of(2016, 5, day))
+      )
+
+      userStorage.getRawData() should equal(Map(
+        LocalDate.of(2016, 5, 19) -> 1,
+        LocalDate.of(2016, 5, 18) -> 2
+      ))
+    }
+  }
+
 }

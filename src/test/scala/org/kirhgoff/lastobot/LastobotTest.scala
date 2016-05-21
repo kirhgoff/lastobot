@@ -88,7 +88,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 //    }
 
     "should take care of smoking" in {
-      userStorage.clear()
+      userStorage.clearSmokes()
       userStorage.smokedOverall() should equal(0)
 
       val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))

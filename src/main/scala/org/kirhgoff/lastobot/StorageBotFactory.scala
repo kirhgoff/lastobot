@@ -1,5 +1,6 @@
 package org.kirhgoff.lastobot
 
+import java.time.LocalDate
 import java.util.Date
 
 import com.typesafe.scalalogging.LazyLogging
@@ -20,6 +21,8 @@ class StorageBotFactory(val databaseHost:String, val databasePort:Int) {
 
 //TODO Implement actor to perform db actions
 class UserStorage(val db:MongoDB) extends LazyLogging {
+
+  // Locale collection
   def updateLocale(newLocale: BotLocale): BotLocale = {
     val collection = db("user_preferences")
     //collection.insert(MongoDBObject("_id"->"locale", "value" -> newLocale.toString))
@@ -45,9 +48,14 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
     }
   }
 
+  // Smokes collection
   val smokes = db("smokes")
-  def smoked(count:Int) = {
-    smokes.insert(MongoDBObject("count" -> count, "date" -> new Date))
+
+  def smoked(count:Int) = smoked(count, new Date)
+  def smoked(count:Int, date:LocalDate) = smoked(count, java.sql.Date.valueOf(date))
+
+  def smoked(count:Int, date:Date) = {
+    smokes.insert(MongoDBObject("count" -> count, "date" -> date))
   }
 
   def smokedOverall():Int = {
@@ -62,7 +70,38 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
     }
   }
 
-  def clear() = smokes.drop()
+  //db.smokes.aggregate({$group: {_id: {$dateToString: {format:"%Y-%d-%m", date:"$date"}}, total:{$sum:"$count"}}})
+  def getRawData():Map[LocalDate, Int] = {
+//    db.smokes.aggregate({
+//      $match: {
+//        _id : {
+//        $gte : {
+//        $subtruct : [
+//        $dayOfYear: new Date(),
+//        30
+//        ]
+//      }
+//      }
+//      },
+//      $group: {
+//        _id: "$date"
+//        total:{
+//        $sum:"$count"
+//      }
+//      }
+//    })
+//
+//    db.smokes.aggregate({
+//      $group: {
+//        _id: "$date",
+//        total:{
+//        $sum:"$count"
+//      }
+//      }
+//    })
+  }
+
+  def clearSmokes() = smokes.drop()
 }
 
 
