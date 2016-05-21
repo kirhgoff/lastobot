@@ -1,6 +1,9 @@
 package org.kirhgoff.lastobot
 
+import java.time.LocalDate
+import java.time.format.TextStyle
 import java.util
+import java.util.Locale
 
 import com.mongodb.casbah.Imports._
 import org.knowm.xchart.BitmapEncoder.BitmapFormat
@@ -29,7 +32,7 @@ object ChartTest extends {
     //val results = userStorage.aggregatedByDateBefore(LocalDate.of(2016, 5, 14))
 
     val random = new Random()
-    val dots = (for (x <- 1 to 30; y = random.nextInt(30))
+    val dots = (for (x <- 1 to 5; y = random.nextInt(30))
       yield (x.toDouble, y.toDouble)).toList
 
     val chart: XYChart = ScalaCharts.monthlyCigarettesChart(dots)
@@ -42,9 +45,14 @@ object ChartTest extends {
 object ScalaCharts extends scalax.chart.module.Charting {
   import scala.collection.JavaConverters._
 
-  implicit def listToJava(list: List[Double]): util.List[Number] = {
+  implicit def doubleListToJavaNumberList(list: List[Double]): util.List[Number] = {
     list.map(_.asInstanceOf[Number]).asJava
   }
+
+  implicit def stringListToJavaStringList(list: List[String]): util.List[String] = {
+    list.asJava
+  }
+
 
   def monthlyCigarettesChart(dots:List[(Double, Double)]): XYChart = {
     val (days: List[Double], values: List[Double]) = dots.unzip
@@ -64,16 +72,13 @@ object ScalaCharts extends scalax.chart.module.Charting {
     chart.getStyler.setLegendPosition(LegendPosition.InsideN)
     chart.getStyler.setYAxisMax(values.max * 1.25)
 
-    //TODO wtf?!
-    val daysJava = listToJava(days)
-    val valuesJava = listToJava(values)
-    chart.addSeries("monthly", daysJava, valuesJava)
+    chart.addSeries("monthly", days, values)
 
     // Trend line
     val (slope:Double, shift:Double) = StatsCalculator.bestFit(dots)
     def trendLine (x:Double) = slope*x + shift
 
-    val (xStart, xEnd) = minMax(days)
+    val (xStart, xEnd) = StatsCalculator.minMax(days)
     val series = chart.addSeries(
       "trend: " + slope,
       List(xStart, xEnd),
@@ -84,7 +89,14 @@ object ScalaCharts extends scalax.chart.module.Charting {
     chart
   }
 
-  def weeklyCigarettesChart(days: List[String], values: List[Double]): CategoryChart = {
+  def weeklyCigarettesChart(dots:List[(Double, Double)]): CategoryChart = {
+      val (days: List[String], values: List[Double]) = dots.map {
+        case (x, y) => ( {
+          val date = LocalDate.ofEpochDay(x.toInt)
+          date.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault)
+        }, y)
+      }.unzip
+
     //TODO weird import issue - move out from the method
     //TODO use i18n
     val chart = new CategoryChartBuilder()
