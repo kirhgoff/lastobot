@@ -15,7 +15,6 @@ import org.knowm.xchart.style.Styler.LegendPosition
 
 import scala.util.Random
 
-
 /**
   * Created by kirilllastovirya on 19/05/2016.
   */
@@ -39,7 +38,7 @@ object ChartTest extends {
 
 }
 
-object ChartsBuilder extends scalax.chart.module.Charting {
+object ChartsBuilder {
   import scala.collection.JavaConverters._
 
   implicit def doubleListToJavaNumberList(list: List[Double]): util.List[Number] =

@@ -129,11 +129,9 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       sender() ! Picture(senderId, weeklyFilePath)
     }
     //------------------------------ Locale ------------------------------
-    case Serving -> ChangingLocale => nextStateData match {
-      case UserChangedLocale(count) =>
+    case Serving -> ChangingLocale =>
         sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
-      case other => logger.error(s"wrong state Serving -> ChangingLocale: $other")
-    }
+
     case ChangingLocale -> Serving => nextStateData match {
       case UserChangedLocale(newLocale) =>
         locale = userStorage.updateLocale(newLocale)

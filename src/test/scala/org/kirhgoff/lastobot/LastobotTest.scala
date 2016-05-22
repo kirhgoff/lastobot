@@ -99,7 +99,8 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       bot.stateName should be(ConfirmingSmoke)
       bot.stateData should be(UserSmoked(42))
 
-      receiveOne(1 seconds)
+      //keyboard
+      receiveOne(1.seconds)
 
       bot ! UserSaid("да")
 
@@ -112,6 +113,32 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       bot ! SmokingStats
 
       bot.stateName should be(ShowingStats)
+    }
+
+    "should be able to check locale" in {
+      userStorage.updateLocale(English)
+      userStorage.getLocaleOr(Russian) should equal(English)
+
+      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
+      bot.stateName should be(Serving)
+      bot.stateData should be(Empty)
+
+      bot ! ChangeLocale
+
+      //keyboard
+      receiveOne(1.seconds)
+
+      bot.stateName should be(ChangingLocale)
+      bot.stateData should be(Empty)
+
+      bot ! UserSaid("Русский")
+
+      bot.stateName should be(Serving)
+      bot.stateData should be(UserChangedLocale(Russian))
+
+      userStorage.getLocaleOr(English) should equal(Russian)
+
+      bot.stateName should be(Serving)
     }
 
   }

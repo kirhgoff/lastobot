@@ -29,9 +29,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.1.2",
 
   // Charts
-  "org.knowm.xchart" % "xchart" % "3.0.4",
-//  "com.github.wookietreiber" % "scala-chart_2.11" % "0.5.0",
-//  "com.itextpdf" % "itextpdf" % "5.5.9"
+  "org.knowm.xchart" % "xchart" % "3.0.4"
 )
 
 // Compiler settings. Use scalac -X for other options and their description.
