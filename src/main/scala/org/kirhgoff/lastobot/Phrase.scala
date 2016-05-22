@@ -150,6 +150,12 @@ object Phrase {
     russian(s"Хозяин, вы выкурили всего $smoked сигарет")
   )
 
+  def noDataYet (implicit locale: BotLocale): String = compose (
+    english(s"Master, seems you have no data available yet!"),
+    russian(s"Хозяин, данных пока нет.")
+  )
+
+
   def englishRussian: Array[String] = Array("English", "Русский")
 
   def changeLocale: String = "Choose locale / выберите язык"

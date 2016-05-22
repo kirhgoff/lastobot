@@ -40,7 +40,6 @@ final case class Picture(sender:Int, filePath:String)
 sealed trait State
 case object Serving extends State
 case object ConfirmingSmoke extends State
-case object ShowingStats extends State
 case object ChangingLocale extends State
 
 //data
@@ -66,16 +65,23 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
 
   when(Serving) {
     case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
-    case Event(Command.SmokingStats, _) => goto(ShowingStats)
+    case Event(Command.SmokingStats, _) => {
+
+      //val data: List[(Long, Double)] =
+      userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
+        case data: List[(Long, Double)] if data.nonEmpty => {
+          sender() ! Picture(senderId, ChartsBuilder.monthlyFile(data))
+          sender() ! Picture(senderId, ChartsBuilder.weeklyFile(data.takeRight(7)))
+        }
+        case _ => sender() ! Text(senderId, noDataYet)
+      }
+      stay
+    }
     case Event(UserSaid(text), _) => goto(Serving)
     case Event(Command.Start, _) =>
       sender() ! Text(senderId, intro)
       stay
     case Event(Command.ChangeLocale, _) => goto(ChangingLocale)
-  }
-
-  when(ShowingStats) {
-    case _ => goto(Serving)
   }
 
   when(ConfirmingSmoke) {
@@ -113,20 +119,6 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
         case _ => sender() ! Text(senderId, what)
       }
       case _ => sender() ! Text(senderId, cancelled)
-    }
-    //------------------------------ Stats ------------------------------
-    case Serving -> ShowingStats => {
-      val monthlyFilePath:String = ChartsBuilder.monthlyFile(
-        userStorage.aggregatedByDateBefore(
-          LocalDate.now.minusDays(30)
-        ))
-      sender() ! Picture(senderId, monthlyFilePath)
-
-      val weeklyFilePath:String = ChartsBuilder.weeklyFile(
-        userStorage.aggregatedByDateBefore(
-          LocalDate.now.minusDays(7)
-      ))
-      sender() ! Picture(senderId, weeklyFilePath)
     }
     //------------------------------ Locale ------------------------------
     case Serving -> ChangingLocale =>
