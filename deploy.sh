@@ -6,14 +6,15 @@ fi
 VERSION=$1
 echo "Deploying version: $VERSION"
 scp ./target/universal/lastobot-$VERSION.tgz lastobot:/deploy
-ssh lastobot:~/deploy
 
-if [ -d "lastobot-$VERSION" ]
-    then echo "Version $VERSION has already been deployed";
-    exit 1;
-fi
+ssh lastobot:/bin/bash << EOF
+    cd ~/deploy
+    if [ -d "lastobot-$VERSION" ]
+        then echo "Version $VERSION has already been deployed";
+        exit 1;
+    fi
 
-tar xvfz lastobot-$VERSION.tgz
-ln -s lastobot-$VERSION current
-ls -rtla
-
+    tar xvfz lastobot-$VERSION.tgz
+    ln -s lastobot-$VERSION current
+    ls -rtla
+EOF
