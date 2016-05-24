@@ -6,7 +6,6 @@ import java.util.Objects
 import akka.actor.FSM
 import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.api.Message
-import org.kirhgoff.lastobot
 import org.kirhgoff.lastobot.BotAction.Reset
 import org.kirhgoff.lastobot.Phrase._
 

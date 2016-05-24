@@ -17,19 +17,29 @@ resolvers += Resolver.sonatypeRepo("snapshots")
 
 //Define dependencies. These ones are only required for Test and Integration Test scopes.
 libraryDependencies ++= Seq(
+  //Test
   "org.scalatest"   %% "scalatest"    % "2.2.4"   % "test",
   "org.scalacheck"  %% "scalacheck"   % "1.12.5"      % "test",
+
+  // Utils
   "org.apache.commons" % "commons-lang3" % "3.4",
+
+  //Akka
   "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4",
   "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
-  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
+
+  //Db
   "org.mongodb" %% "casbah" % "3.1.1",
-  "org.json4s" % "json4s-native_2.10" % "3.2.10",
+
+  //Logging
   "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
   "ch.qos.logback" % "logback-classic" % "1.1.2",
 
   // Charts
-  "org.knowm.xchart" % "xchart" % "3.0.4"
+  "org.knowm.xchart" % "xchart" % "3.0.4",
+
+  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
+  "org.json4s" % "json4s-native_2.11" % "3.2.10"
 )
 
 parallelExecution in Test := false
