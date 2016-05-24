@@ -1,7 +1,8 @@
 #!/bin/bash
 INSTANCE_ID=lastobot
 MAIN_CLASS=org.kirhgoff.lastobot.LastobotApp
+MAIN_ARGS=~/deploy/lastobot.token
 MEM_OPTS="-Xmx256M -Xms256M"
 JAVA_HOME=$JAVA_HOME
 JMX_PORT=0
-source $(dirname "$0")/common.sh
+source $(dirname "$0")/starter.sh
