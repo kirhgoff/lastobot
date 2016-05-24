@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
   "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
   "org.mongodb" %% "casbah" % "3.1.1",
-  "org.json4s" % "json4s-native_2.10" % "3.3.0",
+  "org.json4s" % "json4s-native_2.10" % "3.2.10",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
   "ch.qos.logback" % "logback-classic" % "1.1.2",
 

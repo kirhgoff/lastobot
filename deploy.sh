@@ -19,5 +19,5 @@ ssh lastobot /bin/bash << EOF
     ln -s lastobot-$VERSION current
     ls -rtla
     # for usability
-    ln -s lastobot-$VERSION ~/lastobot
+    ln -s ~/deploy/lastobot-$VERSION ~/lastobot
 EOF
