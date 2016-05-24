@@ -2,121 +2,121 @@ package org.kirhgoff.lastobot
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestFSMRef, TestKit}
-import org.kirhgoff.lastobot.Command._
+import org.kirhgoff.lastobot.BotAction._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with Matchers with FreeSpecLike with BeforeAndAfterAll with BeforeAndAfter {
   def this() = this(ActorSystem("LastobotSpec"))
-  val userStorage = new StorageBotFactory("localhost", 27017).userStorageFor(666)
+
+  private val factory = new StorageBotFactory("localhost", 27017)
+  private val userStorage = factory.userStorageFor(666)
+  private val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
 
   override def afterAll(): Unit = {
     system.terminate()
-    userStorage.db.dropDatabase()
+    factory.close()
   }
 
   before {
     userStorage.db.dropDatabase()
+    bot ! Reset
   }
+
+  //TODO add test with What? cases
 
   "RobotFSM actor" - {
     "should be uninitialized" in {
-      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(1, userStorage))
-      bot.stateName should be(Serving)
-      bot.stateData should be(Empty)
+      assertState(Serving, Empty)
     }
 
     "should take care of smoking" in {
+      assertState(Serving, Empty)
+
       userStorage.clearSmokes()
       userStorage.smokedOverall() should equal(0)
 
-      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
-      bot.stateName should be(Serving)
-      bot.stateData should be(Empty)
-
       bot ! Smoke(42)
-      bot.stateName should be(ConfirmingSmoke)
-      bot.stateData should be(UserSmoked(42))
+      assertState(ConfirmingSmoke, UserSmoked(42))
 
       expectMsgType[Keyboard]
 
       bot ! UserSaid("да")
+      assertState(Serving, Yes)
 
-      bot.stateName should be(Serving)
-      bot.stateData should be(Yes)
+      expectMsgType[Text]
 
       userStorage.smokedOverall() should equal(42)
-
-      bot.stateName should be(Serving)
+      assertState(Serving, Yes)
     }
 
     "should be able to check locale" in {
-      userStorage.updateLocale(English)
-      userStorage.getLocaleOr(Russian) should equal(English)
+      assertState(Serving, Empty)
 
-      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
-      bot.stateName should be(Serving)
-      bot.stateData should be(Empty)
+      setLocale(English)
 
       bot ! ChangeLocale
+      assertState(ChangingLocale, Empty)
 
       expectMsgType[Keyboard]
 
-      bot.stateName should be(ChangingLocale)
-      bot.stateData should be(Empty)
-
       bot ! UserSaid("Русский")
-
-      bot.stateName should be(Serving)
-      bot.stateData should be(UserChangedLocale(Russian))
+      assertState(Serving, UserChangedLocale(Russian))
 
       userStorage.getLocaleOr(English) should equal(Russian)
-
-      bot.stateName should be(Serving)
     }
 
     "should be able to send start message" in {
-      userStorage.updateLocale(English)
-      userStorage.getLocaleOr(Russian) should equal(English)
-
-      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
-      bot.stateName should be(Serving)
-      bot.stateData should be(Empty)
+      assertState(Serving, Empty)
 
       bot ! Start
+      expectText(Phrase.intro(English)) //By default locale is English
 
-      val msg: Text = expectMsgType[Text]
-      msg.sender should equal(666)
-      msg.text should equal(Phrase.intro(English))
-
-      bot.stateName should be(Serving)
+      assertState(Serving, Empty)
     }
 
     "should be able to send stats for smoking" in {
-      val bot = TestFSMRef[State, Data, SmokeBot](new SmokeBot(666, userStorage))
-      bot.stateName should be(Serving)
-      bot.stateData should be(Empty)
+      assertState(Serving, Empty)
 
-      bot ! SmokingStats
-      expectMsgType[Text] match {
-        case Text(senderId, str) =>
-          senderId should equal (666)
-          str should equal (Phrase.noDataYet(English))
-        case _ => fail()
-      }
-      bot.stateName should be(Serving)
+      bot ! ShowSmokingStats
+      expectText(Phrase.noDataYet(English))
+
+      assertState(Serving, Empty)
 
       userStorage.smoked(2)
-      bot ! SmokingStats
+      bot ! ShowSmokingStats
 
-      val msg1: Picture = expectMsgType[Picture]
-      msg1.sender should equal(666)
-      msg1.filePath should include ("/bot")
+      //Expect 2 pictures
+      expectPicture()
+      expectPicture()
 
-      val msg2: Picture = expectMsgType[Picture]
-      msg2.sender should equal(666)
-      msg2.filePath should include ("/bot")
-
-      bot.stateName should be(Serving)
+      assertState(Serving, Empty)
     }
+  }
+
+  def setLocale(newLocale: BotLocale): Unit = {
+    userStorage.updateLocale(newLocale)
+    userStorage.getLocaleOr(getOpposite(newLocale)) should equal(newLocale)
+  }
+
+  def getOpposite(newLocale: BotLocale) = newLocale match {
+    case English => Russian
+    case Russian => English
+  }
+
+  def expectPicture(): Unit = {
+    val msg1: Picture = expectMsgType[Picture]
+    msg1.sender should equal(666)
+    msg1.filePath should include("/bot")
+  }
+
+  def expectText(text: String): Unit = {
+    val msg: Text = expectMsgType[Text]
+    msg.sender should equal(666)
+    msg.text should equal(text)
+  }
+
+  def assertState(currentState: State, smoked: Data): Unit = {
+    bot.stateName should be(currentState)
+    bot.stateData should be(smoked)
   }
 }

@@ -32,6 +32,8 @@ libraryDependencies ++= Seq(
   "org.knowm.xchart" % "xchart" % "3.0.4"
 )
 
+parallelExecution in Test := false
+
 // Compiler settings. Use scalac -X for other options and their description.
 // See Here for more info http://www.scala-lang.org/files/archive/nightly/docs/manual/html/scalac.html 
 scalacOptions ++= List("-feature","-deprecation", "-unchecked", "-Xlint")

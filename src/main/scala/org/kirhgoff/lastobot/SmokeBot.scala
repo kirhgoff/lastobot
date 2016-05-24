@@ -6,6 +6,8 @@ import java.util.Objects
 import akka.actor.FSM
 import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.api.Message
+import org.kirhgoff.lastobot
+import org.kirhgoff.lastobot.BotAction.Reset
 import org.kirhgoff.lastobot.Phrase._
 
 //What Telegram bot receives
@@ -14,11 +16,13 @@ case class UserCommand(sender:Int, commandName:String, args:Seq[String]) extends
 case class UserTextMessage(msg:Message) extends UserMessages
 
 //What commands bot processes
-object Command {
-  final case class Start()
-  final case class ChangeLocale()
-  final case class Smoke(count:Int)
-  final case class SmokingStats()
+trait BotAction
+object BotAction {
+  final case class Start() extends BotAction
+  final case class ChangeLocale() extends BotAction
+  final case class Smoke(count:Int) extends BotAction
+  final case class ShowSmokingStats() extends BotAction
+  final case class Reset() extends BotAction
 }
 
 //What it sends back
@@ -64,8 +68,8 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   startWith(Serving, Empty)
 
   when(Serving) {
-    case Event(Command.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
-    case Event(Command.SmokingStats, _) => {
+    case Event(BotAction.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
+    case Event(BotAction.ShowSmokingStats, _) => {
 
       //val data: List[(Long, Double)] =
       userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
@@ -78,10 +82,10 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
       stay
     }
     case Event(UserSaid(text), _) => goto(Serving)
-    case Event(Command.Start, _) =>
+    case Event(BotAction.Start, _) =>
       sender() ! Text(senderId, intro)
       stay
-    case Event(Command.ChangeLocale, _) => goto(ChangingLocale)
+    case Event(BotAction.ChangeLocale, _) => goto(ChangingLocale)
   }
 
   when(ConfirmingSmoke) {
@@ -129,6 +133,13 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
         locale = userStorage.updateLocale(newLocale)
       case other => logger.error(s"wrong state ChangingLocale -> Serving: $other")
     }
+  }
+
+  whenUnhandled {
+    case Event(Reset, _) =>
+      logger.info("Resetting state")
+      locale = userStorage.getLocaleOr(English)
+      goto(Serving) using Empty
   }
 
   initialize()

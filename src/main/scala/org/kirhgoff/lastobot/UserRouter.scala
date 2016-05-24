@@ -5,6 +5,7 @@ import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.OptionPimps._
 import info.mukel.telegram.bots.TelegramBot
 import info.mukel.telegram.bots.api.{InputFile, Message, ReplyKeyboardMarkup, ReplyMarkup}
+import org.kirhgoff.lastobot.BotAction.{ChangeLocale, ShowSmokingStats, Smoke, Start}
 
 import scala.collection.mutable
 
@@ -22,10 +23,10 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
     //TODO move out command constants
     case UserCommand(sender, commandName, args) ⇒ commandName match {
         //TODO proper int parsing
-      case "smoke" => userActor (sender) ! Command.Smoke(args.headOption.getOrElse("1").toInt)
-      case "stats" => userActor (sender) ! Command.SmokingStats
-      case "start" => userActor (sender) ! Command.Start
-      case "setlocale" => userActor (sender) ! Command.ChangeLocale
+      case "smoke" => userActor (sender) ! Smoke(args.headOption.getOrElse("1").toInt)
+      case "stats" => userActor (sender) ! ShowSmokingStats
+      case "start" => userActor (sender) ! Start
+      case "setlocale" => userActor (sender) ! ChangeLocale
       case any => logger.error(s"Unknown command $any")
     }
     case UserTextMessage(msg:Message) => {

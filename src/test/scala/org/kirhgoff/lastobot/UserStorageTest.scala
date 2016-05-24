@@ -11,7 +11,7 @@ class UserStorageTest  extends Matchers with FreeSpecLike  with BeforeAndAfterAl
   import DateConversions._
   val userStorage = new StorageBotFactory("localhost", 27017).userStorageFor(666)
 
-  override def afterAll(): Unit = {
+  override def beforeAll(): Unit = {
     userStorage.db.dropDatabase()
   }
 
