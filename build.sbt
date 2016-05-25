@@ -25,21 +25,22 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-lang3" % "3.4",
 
   //Akka
-  "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4",
-  "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
+  "com.typesafe.akka" % "akka-actor_2.11" % "2.4.6",
+  "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.6",
 
   //Db
   "org.mongodb" %% "casbah" % "3.1.1",
 
   //Logging
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
-  "ch.qos.logback" % "logback-classic" % "1.1.2",
+  "com.typesafe.scala-logging" % "scala-logging_2.11" % "3.4.0",
+  "ch.qos.logback" % "logback-classic" % "1.1.7",
 
   // Charts
   "org.knowm.xchart" % "xchart" % "3.0.4",
 
-  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
+  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT",// excludeAll ExclusionRule(organization="org.json4s"),
   "org.json4s" % "json4s-native_2.11" % "3.2.10"
+  //"info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT" 
 )
 
 parallelExecution in Test := false
