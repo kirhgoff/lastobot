@@ -1,5 +1,7 @@
 package org.kirhgoff.lastobot
 
+import scala.language.implicitConversions
+
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneId}
 import java.util.Date
 
