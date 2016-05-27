@@ -38,9 +38,9 @@ libraryDependencies ++= Seq(
   // Charts
   "org.knowm.xchart" % "xchart" % "3.0.4",
 
-  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT",// excludeAll ExclusionRule(organization="org.json4s"),
-  "org.json4s" % "json4s-native_2.11" % "3.2.10"
-  //"info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT" 
+//  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT",// excludeAll ExclusionRule(organization="org.json4s"),
+//  "org.json4s" % "json4s-native_2.11" % "3.2.10"
+  "info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT"
 )
 
 parallelExecution in Test := false
