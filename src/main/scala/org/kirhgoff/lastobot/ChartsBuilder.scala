@@ -1,6 +1,5 @@
 package org.kirhgoff.lastobot
 
-import java.io.File
 import java.nio.file.Files
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -14,6 +13,8 @@ import org.knowm.xchart._
 import org.knowm.xchart.style.Styler.LegendPosition
 
 import scala.util.Random
+
+import scala.language.implicitConversions
 
 /**
   * Created by kirilllastovirya on 19/05/2016.
