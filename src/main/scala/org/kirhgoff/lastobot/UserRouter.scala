@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.OptionPimps._
 import info.mukel.telegram.bots.TelegramBot
 import info.mukel.telegram.bots.api.{InputFile, Message, ReplyKeyboardMarkup, ReplyMarkup}
-import org.kirhgoff.lastobot.BotAction.{ChangeLocale, ShowSmokingStats, Smoke, Start}
+import org.kirhgoff.lastobot.BotAction._
 
 import scala.collection.mutable
 
@@ -13,7 +13,8 @@ import scala.collection.mutable
   * Created by kirilllastovirya on 26/04/2016.
   *
   * Class processes requests received from user and converts them
-  * into internal bot events, creating bots per sender
+  * into internal bot events, creating bots per sender. Receives
+  * bots replies and converts them to Telegram messages
   */
 class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
   val senderMap = mutable.Map[Int, ActorRef]()
@@ -24,30 +25,31 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
     case UserCommand(sender, commandName, args) ⇒ commandName match {
         //TODO proper int parsing
       case "smoke" => userActor (sender) ! Smoke(args.headOption.getOrElse("1").toInt)
-      case "stats" => userActor (sender) ! ShowSmokingStats
+      case "smokestats" => userActor (sender) ! ShowSmokingStats
+      case "weight" => userActor (sender) ! Weight(args.headOption)
+      case "weightstats" => userActor (sender) ! ShowWeightStats
       case "start" => userActor (sender) ! Start
       case "setlocale" => userActor (sender) ! ChangeLocale
       case any => logger.error(s"Unknown command $any")
     }
-    case UserTextMessage(msg:Message) => {
+
+    case UserTextMessage(msg:Message) =>
       userActor(msg.chat.id) ! UserSaid(msg.text.getOrElse("blah"))
-    }
 
     //Feedback
-    case Text(sender:Int, text:String) => {
+    case Text(sender:Int, text:String) =>
       bot.sendMessage(sender, text)
-    }
-    case Keyboard(sender:Int, text:String, buttons:Array[Array[String]]) => {
-      val keyboard: ReplyMarkup = new ReplyKeyboardMarkup(
-        buttons,
-        resizeKeyboard = true,
-        oneTimeKeyboard = true
-      )
-      bot.sendMessage(sender, text, None, None, None, Option(keyboard))
-    }
-    case Picture(sender:Int, filePath:String) => {
+
+    case Keyboard(sender:Int, text:String, buttons:Array[Array[String]]) =>
+      bot.sendMessage(sender, text, None, None, None,
+        Option(new ReplyKeyboardMarkup(
+          buttons,
+          resizeKeyboard = true,
+          oneTimeKeyboard = true
+      )))
+
+    case Picture(sender:Int, filePath:String) =>
       bot.sendPhoto(sender, InputFile(filePath))
-    }
   }
 
   def userActor(senderId: Int): ActorRef = {

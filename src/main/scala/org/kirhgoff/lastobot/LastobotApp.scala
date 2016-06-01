@@ -17,7 +17,7 @@ class LastobotApp(token:String) extends TelegramBot(token)
 
   //TODO move strings to Commands object
   val states = {
-    List("start", "smoke", "stats", "setlocale").foreach(
+    List("start", "smoke", "smokestats", "setlocale", "weight", "weightstats").foreach(
       c  => on(c) { (sender, args) => {
           logger.info(s"Sending user command: $c")
           userRouter ! UserCommand(sender, c, args)

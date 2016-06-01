@@ -9,6 +9,8 @@ import info.mukel.telegram.bots.api.Message
 import org.kirhgoff.lastobot.BotAction.Reset
 import org.kirhgoff.lastobot.Phrase._
 
+import scala.util.{Failure, Success, Try}
+
 //What Telegram bot receives
 trait UserMessages
 case class UserCommand(sender:Int, commandName:String, args:Seq[String]) extends UserMessages
@@ -21,6 +23,8 @@ object BotAction {
   final case class ChangeLocale() extends BotAction
   final case class Smoke(count:Int) extends BotAction
   final case class ShowSmokingStats() extends BotAction
+  final case class Weight(count:Option[String]) extends BotAction
+  final case class ShowWeightStats() extends BotAction
   final case class Reset() extends BotAction
 }
 
@@ -43,6 +47,8 @@ final case class Picture(sender:Int, filePath:String)
 sealed trait State
 case object Serving extends State
 case object ConfirmingSmoke extends State
+case object GettingWeight extends State
+case object ConfirmingWeight extends State
 case object ChangingLocale extends State
 
 //data
@@ -53,6 +59,7 @@ case object No extends Data
 case object What extends Data
 final case class UserSaid(text:String) extends Data
 final case class UserSmoked(count:Int) extends Data
+final case class UserMeasuredWeight(weight:Double) extends Data
 final case class UserChangedLocale(locale:BotLocale) extends Data
 
 
@@ -67,6 +74,14 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   startWith(Serving, Empty)
 
   when(Serving) {
+    case Event(BotAction.Weight(stringOption), _) => stringOption match {
+      case Some(stringValue) => Try {stringValue.toDouble} match {
+        case Success (value) => goto(ConfirmingWeight) using UserMeasuredWeight(value)
+        case Failure(ex) =>  goto(GettingWeight)
+      }
+      case None => goto(GettingWeight)
+    }
+
     case Event(BotAction.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(BotAction.ShowSmokingStats, _) => {
 
@@ -88,6 +103,24 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[Stat
   }
 
   when(ConfirmingSmoke) {
+    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
+      goto(Serving) using Yes
+    case Event(UserSaid(text), _) if Recognizer.no(text) =>
+      goto(Serving) using No
+    case _ =>
+      goto(Serving) using What
+  }
+
+  when(GettingWeight) {
+    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
+      goto(Serving) using Yes
+    case Event(UserSaid(text), _) if Recognizer.no(text) =>
+      goto(Serving) using No
+    case _ =>
+      goto(Serving) using What
+  }
+
+  when(ConfirmingWeight) {
     case Event(UserSaid(text), _) if Recognizer.yes(text) =>
       goto(Serving) using Yes
     case Event(UserSaid(text), _) if Recognizer.no(text) =>
