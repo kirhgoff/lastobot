@@ -4,7 +4,6 @@ name := "lastobot"
 
 organization := "org.kirhgoff"
 
-
 scalaVersion := "2.11.8"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -32,7 +31,6 @@ libraryDependencies ++= Seq(
   // Charts
   "org.knowm.xchart" % "xchart" % "3.0.4",
 
-  //"info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT"
   "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT"
   //"info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT"
 )
