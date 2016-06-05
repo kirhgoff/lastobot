@@ -8,12 +8,8 @@ organization := "org.kirhgoff"
 
 scalaVersion := "2.11.8"
 
-crossScalaVersions := Seq(scalaVersion.value)
-
 //resolvers += "Local Maven Repository" at "http://eif-repository.moex.com/nexus/content/repositories/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
-
-//ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 //Define dependencies. These ones are only required for Test and Integration Test scopes.
 libraryDependencies ++= Seq(
@@ -22,9 +18,8 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-lang3" % "3.4",
   "com.typesafe.akka" % "akka-actor_2.11" % "2.4.4",
   "com.typesafe.akka" % "akka-testkit_2.11" % "2.4.4",
-  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT" excludeAll ExclusionRule(organization="org.json4s"),
+  "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT",
   "org.mongodb" %% "casbah" % "3.1.1",
-  "org.json4s" % "json4s-native_2.10" % "3.2.10",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
   "ch.qos.logback" % "logback-classic" % "1.1.2",
 
@@ -42,14 +37,8 @@ javaOptions += "-Xmx4G"
 
 mainClass in Compile := Some("org.kirhgoff.lastobot.LastobotApp")
 
-sbtPlugin := true
-
 // Release
 import ReleaseTransformations._
-
-val buildReleaseTarball = (ref: ProjectRef) => ReleaseStep(
-  action = releaseStepTaskAggregated(packageZipTarball in Universal in ref)
-)
 
 releaseProcess := Seq[ReleaseStep](
     inquireVersions,                        // : ReleaseStep
