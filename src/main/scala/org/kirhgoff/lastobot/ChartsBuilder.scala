@@ -53,7 +53,7 @@ object ChartsBuilder {
       data.map {case (x, y) => (x.toDouble, y)}
     )
     BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
-    filePath
+    filePath + ".png"
   }
 
   def weeklyFile(data: List[(Long, Double)]): String = {
@@ -62,7 +62,7 @@ object ChartsBuilder {
       data.map {case (x, y) => (x.toDouble, y)}
     )
     BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
-    filePath
+    filePath + ".png"
   }
 
   def monthlyCigarettesChart(dots:List[(Double, Double)]): XYChart = {

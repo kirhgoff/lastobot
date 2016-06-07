@@ -49,6 +49,7 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
       )))
 
     case Picture(sender:Int, filePath:String) =>
+      logger.info(s"Received picture $filePath")
       bot.sendPhoto(sender, InputFile(filePath))
   }
 

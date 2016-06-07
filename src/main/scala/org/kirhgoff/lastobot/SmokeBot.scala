@@ -85,14 +85,18 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
 
     case Event(BotAction.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(BotAction.ShowSmokingStats, _) => {
-
+      logger.info("Showing smoking stats")
       //val data: List[(Long, Double)] =
       userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
         case data: List[(Long, Double)] if data.nonEmpty => {
+
           sender() ! Picture(senderId, ChartsBuilder.monthlyFile(data))
           sender() ! Picture(senderId, ChartsBuilder.weeklyFile(data.takeRight(7)))
         }
-        case _ => sender() ! Text(senderId, noDataYet)
+        case x => {
+          logger.info (s"Got this:$x")
+          sender() ! Text(senderId, noDataYet)
+        }
       }
       stay
     }
