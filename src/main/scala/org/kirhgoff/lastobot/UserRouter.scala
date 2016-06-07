@@ -23,7 +23,7 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
   override def receive: Receive = {
     //TODO move out command constants
     case UserCommand(sender, commandName, args) ⇒ commandName match {
-        //TODO proper int parsing
+        //TODO pass option and skip confirmation if value is set
       case "smoke" => userActor (sender) ! Smoke(args.headOption.getOrElse("1").toInt)
       case "smokestats" => userActor (sender) ! ShowSmokingStats
       case "weight" => userActor (sender) ! Weight(args.headOption)

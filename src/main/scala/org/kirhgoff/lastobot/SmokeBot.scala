@@ -3,7 +3,7 @@ package org.kirhgoff.lastobot
 import java.time.LocalDate
 import java.util.Objects
 
-import akka.actor.FSM
+import akka.actor.{FSM, LoggingFSM}
 import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.api.Message
 import org.kirhgoff.lastobot.BotAction.Reset
@@ -66,7 +66,8 @@ final case class UserChangedLocale(locale:BotLocale) extends Data
 /**
   * Created by kirilllastovirya on 26/04/2016.
   */
-class SmokeBot(val senderId: Int, val userStorage: UserStorage) extends FSM[State, Data] with LazyLogging {
+class SmokeBot(val senderId: Int, val userStorage: UserStorage)
+  extends LoggingFSM[State, Data] with LazyLogging {
 
   //By default bot is english
   implicit var locale:BotLocale = userStorage.getLocaleOr(English)

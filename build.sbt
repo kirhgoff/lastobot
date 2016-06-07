@@ -6,6 +6,7 @@ organization := "org.kirhgoff"
 
 scalaVersion := "2.11.8"
 
+//resolvers += "Local Maven Repository" at "http://eif-repository.moex.com/nexus/content/repositories/releases"
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 //Define dependencies. These ones are only required for Test and Integration Test scopes.
