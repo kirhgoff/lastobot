@@ -40,6 +40,11 @@ object ChartTest extends {
 }
 
 object ChartsBuilder {
+  val MONTHLY_WIDTH = 600
+  val MONTHLY_HEIGHT = 200
+  val WEEKLY_WIDTH = 600
+  val WEEKLY_HEIGHT = 200
+
   import scala.collection.JavaConverters._
 
   implicit def doubleListToJavaNumberList(list: List[Double]): util.List[Number] =
@@ -58,7 +63,7 @@ object ChartsBuilder {
 
   def weeklyFile(data: List[(Long, Double)]): String = {
     val filePath = createTempFile
-    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(
+    val chart: CategoryChart = ChartsBuilder.weeklyCigarettesChart(
       data.map {case (x, y) => (x.toDouble, y)}
     )
     BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
@@ -69,8 +74,8 @@ object ChartsBuilder {
     val (days: List[Double], values: List[Double]) = dots.unzip
 
     val chart = new XYChartBuilder()
-      .width(400)
-      .height(600)
+      .width(MONTHLY_WIDTH)
+      .height(MONTHLY_HEIGHT)
       .title("Month results")
       .xAxisTitle("Days before")
       .yAxisTitle("Cigarettes")
@@ -111,8 +116,8 @@ object ChartsBuilder {
     //TODO weird import issue - move out from the method
     //TODO use i18n
     val chart = new CategoryChartBuilder()
-      .width(400)
-      .height(600)
+      .width(WEEKLY_WIDTH)
+      .height(WEEKLY_HEIGHT)
       .title("Week results")
       .xAxisTitle("Days")
       .yAxisTitle("Cigarettes")
