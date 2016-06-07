@@ -136,13 +136,28 @@ object Phrase {
   )
 
   def youSmokeQuestion(count: Int)(implicit locale: BotLocale): String = compose (
-    russian(s"Сигарет выкурено: $count?"), //TODO different cases
-    english(s"You smoked $count cigarettes?")
+    russian(anyOf(
+      s"Хозяин, я правильно понял, сигарет выкурено: $count?",
+      s"Записываю что выкурено $count сигарет. Хозяин, правильно?",
+      s"Записываю $count сигарет, да, хозяин?"
+    )),
+    english(anyOf(
+      s"You smoked $count cigarettes, master?",
+      s"$count cigarettes, is that right, master?"
+    ))
   )
 
   def youSmokeConfirmed(count: Int)(implicit locale: BotLocale): String = compose (
-    english(s"Done, you smoked $count cigarettes, master"),
-    russian(s"Хозяин, сигарет выкурено: $count")
+    english(anyOf(
+      s"Done, you smoked $count cigarettes, master",
+      s"$count cigarettes, master, got it.",
+      s"Saving $count cigarettes"
+    )), //TODO add cmon, so much?!
+    russian(anyOf(
+      s"Хозяин, сигарет выкурено: $count",
+      s"$count сигарет, пишу в базу",
+      s"Записываю: $count сигарет"
+    ))
  )
 
   def smokedOverall(smoked: Int)(implicit locale: BotLocale): String = compose (

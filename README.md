@@ -5,35 +5,20 @@ Playground for telegram bot
 -------------------
 lastobot
 -------------------
-obey - Make bot obey you
-eat - Bot gives you some food
-abuse - Let bot plays russian joke with you
 smoke - Ask bot to remember that you smoked xx cigarettes recently
-stats - Ask bot to print statistics for your smoking habit
+smokestats - Ask bot to print statistics for your smoking habit
+setlocale - Change language you want robot talk to
 
 -------------------
-Measures bot
+Generic measurement
 -------------------
 
-=== Use Case 1
+Main idea of lastobot - you are able to measure any phenomena in your life if you know how to measure it, of course. Bot will keep all the records for you.
 
-Mark wants to track his weight. He tells bot that he wants to track his weight
-/track weight
-Bot sends a keyboard to choose type of counter - [singular, double, category]
-Optional: choose unit name TODO subsystem of unit translation
-User chooses and bot replies that now he is tracking now counter
-
-=== Use case 2
-
-User notifies bot that about measure
-TODO let user to do it in past or amend recent measure
-/notch => keyboard of measures => user chooses => enter value => user enters => ok
-/notch <substring> => Bot asks for value (or cancel) => ok
-Bot saves measure to database
-
-=== Use case 3
-
-User want to see his stats
-/stats
-Bot sends three graphs - per day, per week and per month
+But how to set up tracking for most rare and custom thing in you life? The process should be the following:
+1. Name of the measure - you can be creative if you want to measure something restricted or you are afraid your mom checks your phone.
+2. Type - it could be
+	- value : some number (X cigarettes smoked) - we can model it as a function of time, see some interesting statistics
+	- kind : some categoty you observe (I saw XXX, yesterday i saw YYY) - you can group events by category
+3. Units - you define units for the measure (like alcohol)
 
