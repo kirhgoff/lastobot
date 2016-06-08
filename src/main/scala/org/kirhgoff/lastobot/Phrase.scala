@@ -136,19 +136,20 @@ object Phrase {
     russian("Отменяю")
   )
 
-  def youSmokeQuestion(count: Int)(implicit locale: BotLocale): String = compose (
+  def howManyCigarettes(implicit locale: BotLocale): String = compose (
     russian(anyOf(
-      s"Хозяин, я правильно понял, сигарет выкурено: $count?",
-      s"Записываю что выкурено $count сигарет. Хозяин, правильно?",
-      s"Записываю $count сигарет, да, хозяин?"
+      s"Хозяин, сколько сигарет вы выкурили?",
+      s"Готов записывать, хозяин, сколько сигарет?",
+      s"Сколько сигарет, хозяин?"
     )),
     english(anyOf(
-      s"You smoked $count cigarettes, master?",
-      s"$count cigarettes, is that right, master?"
+      s"How many cigarettes, master?",
+      s"Ready to save, how many, master?",
+      s"How many, master?"
     ))
   )
 
-  def youSmokeConfirmed(count: Int)(implicit locale: BotLocale): String = compose (
+  def youSmoked(count: Int)(implicit locale: BotLocale): String = compose (
     english(anyOf(
       s"Done, you smoked $count cigarettes, master",
       s"$count cigarettes, master, got it.",

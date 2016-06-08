@@ -24,7 +24,7 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
     //TODO move out command constants
     case UserCommand(sender, commandName, args) ⇒ commandName match {
         //TODO pass option and skip confirmation if value is set
-      case "smoke" => userActor (sender) ! Smoke(args.headOption.getOrElse("1").toInt)
+      case "smoke" => userActor (sender) ! Smoke(args.headOption)
       case "smokestats" => userActor (sender) ! ShowSmokingStats
       case "weight" => userActor (sender) ! Weight(args.headOption)
       case "weightstats" => userActor (sender) ! ShowWeightStats

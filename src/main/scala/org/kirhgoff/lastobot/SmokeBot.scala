@@ -22,9 +22,9 @@ trait BotAction
 object BotAction {
   final case class Start() extends BotAction
   final case class ChangeLocale() extends BotAction
-  final case class Smoke(count:Int) extends BotAction
+  final case class Smoke(count:Option[String]) extends BotAction
   final case class ShowSmokingStats() extends BotAction
-  final case class Weight(count:Option[String]) extends BotAction
+  final case class Weight(weight:Option[String]) extends BotAction
   final case class ShowWeightStats() extends BotAction
   final case class Reset() extends BotAction
 }
@@ -47,7 +47,7 @@ final case class Picture(sender:Int, filePath:String)
 //states
 sealed trait State
 case object Serving extends State
-case object ConfirmingSmoke extends State
+case object GettingSmoked extends State
 case object GettingWeight extends State
 case object ConfirmingWeight extends State
 case object ChangingLocale extends State
@@ -82,10 +82,29 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
       stay
 
     //setlocale
-    case Event(BotAction.ChangeLocale, _) => goto(ChangingLocale)
+    case Event(BotAction.ChangeLocale, _) =>
+      sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
+      goto(ChangingLocale)
 
     //smokes
-    case Event(BotAction.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
+    case Event(BotAction.Smoke(stringOption), _) => stringOption match {
+      case Some(stringValue) => Try {stringValue.toInt} match {
+        case Success (value) =>
+          logger.info(s"User provided valid value for smoke: $value")
+          sender() ! Text(senderId, youSmoked(value))
+          userStorage.smoked(value)
+          stay
+        case Failure(ex) =>
+          //TODO extract method say
+          //TODO add what with parameter - blah what?
+          sender() ! Text(senderId, what)
+          goto(Serving) using Empty
+      }
+      case None =>
+        sender() ! Text(senderId, howManyCigarettes)
+        goto(GettingSmoked)
+    }
+
     case Event(BotAction.ShowSmokingStats, _) => {
       logger.info("Showing smoking stats")
       userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
@@ -125,14 +144,18 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
       goto(Serving) using Empty
   }
 
-  when(ConfirmingSmoke) {
-    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
-      goto(Serving) using Yes
-    case Event(UserSaid(text), _) if Recognizer.no(text) =>
-      goto(Serving) using No
-    case _ =>
-      sender() ! Text(senderId, what)
-      goto(Serving) using Empty
+  when(GettingSmoked) {
+    case Event(UserSaid(text), _) => Try {text.toInt} match {
+      case Success (value) =>
+        //TODO joke about master getting too much weight
+        logger.info(s"GettingSmoked: Parsed value for smokes: $value")
+        userStorage.smoked(value)
+        sender() ! Text(senderId, youSmoked(value))
+        goto (Serving) using Empty
+      case Failure(ex) =>
+        sender() ! Text(senderId, what) //TODO joke about master being ashamed
+        goto(Serving) using Empty
+    }
   }
 
   when(GettingWeight) {
@@ -149,57 +172,21 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
     }
   }
 
-  when(ConfirmingWeight) {
-    case Event(UserSaid(text), UserMeasuredWeight(value)) if Recognizer.yes(text) =>
-      goto(Serving) using Yes
-    case Event(UserSaid(text), _) if Recognizer.no(text) =>
-      goto(Serving) using No
-    case _ =>
-      sender() ! Text(senderId, what)
-      goto(Serving) using Empty
-  }
-
   when(ChangingLocale) {
     case Event(UserSaid(text), _) if Recognizer.english(text) =>
-      goto(Serving) using UserChangedLocale(English)
+      userStorage.updateLocale(English)
+      goto(Serving) using Empty
     case Event(UserSaid(text), _) if Recognizer.russian(text) =>
-      goto(Serving) using UserChangedLocale(Russian)
-    case _ =>
+      userStorage.updateLocale(Russian)
+      goto(Serving) using Empty
+    case other =>
+      logger.error(s"wrong state ChangingLocale -> Serving: $other")
       sender() ! Text(senderId, what)
       goto(Serving) using Empty
   }
 
-  onTransition {
-    //------------------------------ Smoking ------------------------------
-    case Serving -> ConfirmingSmoke => nextStateData match {
-      case UserSmoked(count) => sender() ! Keyboard(senderId,
-        youSmokeQuestion(count),
-        Array(yesNo(locale)))
-      case _ =>
-    }
-    case ConfirmingSmoke -> Serving => nextStateData match {
-      case Yes => stateData match {
-        case UserSmoked(count) => {
-          userStorage.smoked(count)
-          sender() ! Text(senderId, youSmokeConfirmed(count))
-        }
-        case _ => sender() ! Text(senderId, what) //TODO match any incoming to Serving using What
-      }
-      case _ => sender() ! Text(senderId, cancelled)
-    }
-
-
-    //------------------------------ Locale ------------------------------
-    case Serving -> ChangingLocale =>
-        //TODO move to transition
-        sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
-
-    case ChangingLocale -> Serving => nextStateData match {
-      case UserChangedLocale(newLocale) =>
-        locale = userStorage.updateLocale(newLocale)
-      case other => logger.error(s"wrong state ChangingLocale -> Serving: $other")
-    }
-  }
+//  onTransition {
+//  }
 
   whenUnhandled {
     case Event(Reset, _) =>
