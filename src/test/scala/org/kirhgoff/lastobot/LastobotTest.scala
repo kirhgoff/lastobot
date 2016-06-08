@@ -20,18 +20,17 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
   before {
     userStorage.db.dropDatabase()
     bot ! Reset
+    //TODO assertState(Serving, Empty)
+  }
+
+  after{
+    //TODO assertState(Serving, Empty)
   }
 
   //TODO add test with What? cases
 
   "RobotFSM actor" - {
-    "should be uninitialized" in {
-      assertState(Serving, Empty)
-    }
-
     "should take care of smoking" in {
-      assertState(Serving, Empty)
-
       userStorage.clearSmokes()
       userStorage.smokedOverall() should equal(0)
 
@@ -50,8 +49,6 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     }
 
     "should be able to check locale" in {
-      assertState(Serving, Empty)
-
       setLocale(English)
 
       bot ! ChangeLocale
@@ -66,8 +63,6 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     }
 
     "should be able to send start message" in {
-      assertState(Serving, Empty)
-
       bot ! Start
       expectText(Phrase.intro(English)) //By default locale is English
 
@@ -75,8 +70,6 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     }
 
     "should be able to send stats for smoking" in {
-      assertState(Serving, Empty)
-
       bot ! ShowSmokingStats
       expectText(Phrase.noDataYet(English))
 
@@ -91,6 +84,42 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
 
       assertState(Serving, Empty)
     }
+
+    "save weight if user provided a number" in {
+      bot !  Weight(Some("45.0"))
+      expectTextWith("45.0") //
+      userStorage.lastWeight() should equal (Some(45.0))
+
+      assertState(Serving, Empty)
+    }
+
+    "ask what if user provided blah instead of number" in {
+      bot !  Weight(Some("blah"))
+      expectMsgType[Text] //what?
+
+      assertState(Serving, Empty)
+    }
+
+    "ask for weight if user just typed weight" in {
+      bot !  Weight(None)
+      expectMsgType[Text] //Type the weight
+
+      bot !  UserSaid("55.0")
+      userStorage.lastWeight() should equal (Some(55.0))
+
+      assertState(Serving, Empty)
+    }
+
+    "ask for weight if user just typed weight and he typed blah" in {
+      bot !  Weight(None)
+      expectMsgType[Text] //Type the weight
+
+      bot !  UserSaid("blah")
+      expectMsgType[Text] //what?
+
+      assertState(Serving, Empty)
+    }
+
   }
 
   def setLocale(newLocale: BotLocale): Unit = {
@@ -113,6 +142,11 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
     val msg: Text = expectMsgType[Text]
     msg.sender should equal(666)
     msg.text should equal(text)
+  }
+
+  def expectTextWith(substring: String): Unit = {
+    val msg: Text = expectMsgType[Text]
+    msg.text should include(substring)
   }
 
   def assertState(currentState: State, smoked: Data): Unit = {

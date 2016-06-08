@@ -10,6 +10,23 @@ smokestats - Ask bot to print statistics for your smoking habit
 setlocale - Change language you want robot talk to
 
 -------------------
+Common chat
+-------------------
+
+user -> smoke => bot ::= SmokingValueRetrival
+bot -> "Enter number"
+user -> XX
+	bot -> You smoked XX cigarettes! & saved
+user -> _ : not number 
+	bot -> Not sure what you smoked
+
+user -> smoke 4
+bot -> You smoked 4 cigarettes! & saved
+
+user -> delete
+bot -> Deleted last info that you smoked 4 cigarettes!
+
+-------------------
 Generic measurement
 -------------------
 

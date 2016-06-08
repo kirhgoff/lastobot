@@ -32,6 +32,7 @@ object DateConversions {
 
 //TODO Implement actor to perform db actions
 class UserStorage(val db:MongoDB) extends LazyLogging {
+
   import DateConversions._
 
   // Locale collection
@@ -54,6 +55,19 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
         logger.error(s"Found no locale, falling back: $defaultLocale")
         defaultLocale
       }
+    }
+  }
+
+  val weights = db("weights")
+  def weightMeasured(weight:Double):Unit = weightMeasured(weight, new Date)
+  def weightMeasured(weight:Double, date:java.util.Date) = {
+    weights.insert(MongoDBObject("weight" -> weight, "date" -> date, "epochDay" -> absoluteDays(date)))
+  }
+
+  def lastWeight():Option[Double] = {
+    weights.find().sort(MongoDBObject("date" -> 1)).limit(1).toList.headOption match {
+      case Some(result) => Some(result("weight").asInstanceOf[Double])
+      case None => None
     }
   }
 

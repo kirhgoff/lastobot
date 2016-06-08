@@ -39,6 +39,7 @@ object Recognizer {
 //TODO refactor locale match to partial function
 
 object Phrase {
+
   val random = new Random
 
   def anyOf(text:String*) = text(random.nextInt(text.length))
@@ -156,7 +157,7 @@ object Phrase {
     russian(anyOf(
       s"Хозяин, сигарет выкурено: $count",
       s"$count сигарет, пишу в базу",
-      s"Записываю: $count сигарет"
+      s"Записываю: $count сигаретx"
     ))
  )
 
@@ -170,6 +171,43 @@ object Phrase {
     russian(s"Хозяин, данных пока нет.")
   )
 
+  def weightMeasured(value: Double)(implicit locale: BotLocale): String = compose(
+    english(anyOf(
+      s"Saving your weight, master - $value kilos",
+      s"Got it, master, $value kilos",
+      s"$value kilos it is, master"
+    )),
+    russian(anyOf(
+      s"Сохраняю вес - $value кг.",
+      s"Текущий вес $value кг, хозяин",
+      s"Хорошо, хозяин, $value килограмм"
+    ))
+  )
+
+  def typeYourWeight(implicit locale: BotLocale): String = compose(
+    english(anyOf(
+      s"I am ready, master, what is your weight?",
+      s"What is your current weight, master?"
+    )),
+    russian(anyOf(
+      s"Хозяин, сколько?",
+      s"Готов записать ваш текущий вес, хозяин. Сколько?",
+      s"Ваш текущий вес, хозяин?"
+    ))
+  )
+
+  def confirmWeight(value: Double)(implicit locale: BotLocale): String = compose(
+    english(anyOf(
+      s"Saving $value kilos",
+      s"Got it, master, $value kilos",
+      s"$value kilos it is, master"
+    )),
+    russian(anyOf(
+      s"Сохраняю вес - $value кг.",
+      s"Текущий вес $value кг, хозяин",
+      s"Хорошо, хозяин, $value килограмм"
+    ))
+  )
 
   def englishRussian: Array[String] = Array("English", "Русский")
 

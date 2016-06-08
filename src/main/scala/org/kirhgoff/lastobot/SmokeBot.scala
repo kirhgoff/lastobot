@@ -6,6 +6,7 @@ import java.util.Objects
 import akka.actor.{FSM, LoggingFSM}
 import com.typesafe.scalalogging.LazyLogging
 import info.mukel.telegram.bots.api.Message
+import org.kirhgoff.lastobot
 import org.kirhgoff.lastobot.BotAction.Reset
 import org.kirhgoff.lastobot.Phrase._
 
@@ -56,7 +57,6 @@ sealed trait Data
 case object Empty extends Data
 case object Yes extends Data
 case object No extends Data
-case object What extends Data
 final case class UserSaid(text:String) extends Data
 final case class UserSmoked(count:Int) extends Data
 final case class UserMeasuredWeight(weight:Double) extends Data
@@ -75,18 +75,19 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
   startWith(Serving, Empty)
 
   when(Serving) {
-    case Event(BotAction.Weight(stringOption), _) => stringOption match {
-      case Some(stringValue) => Try {stringValue.toDouble} match {
-        case Success (value) => goto(ConfirmingWeight) using UserMeasuredWeight(value)
-        case Failure(ex) =>  goto(GettingWeight)
-      }
-      case None => goto(GettingWeight)
-    }
+    //start
+    case Event(BotAction.Start, _) =>
+      sender() ! Text(senderId, intro)
+      //TODO show keyboard with trackers
+      stay
 
+    //setlocale
+    case Event(BotAction.ChangeLocale, _) => goto(ChangingLocale)
+
+    //smokes
     case Event(BotAction.Smoke(count), _) => goto(ConfirmingSmoke) using UserSmoked(count)
     case Event(BotAction.ShowSmokingStats, _) => {
       logger.info("Showing smoking stats")
-      //val data: List[(Long, Double)] =
       userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
         case data: List[(Long, Double)] if data.nonEmpty => {
 
@@ -100,11 +101,28 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
       }
       stay
     }
-    case Event(UserSaid(text), _) => goto(Serving)
-    case Event(BotAction.Start, _) =>
-      sender() ! Text(senderId, intro)
-      stay
-    case Event(BotAction.ChangeLocale, _) => goto(ChangingLocale)
+
+    //weight
+    case Event(BotAction.Weight(stringOption), _) => stringOption match {
+      case Some(stringValue) => Try {stringValue.toDouble} match {
+        case Success (value) =>
+          logger.info(s"User provided valid value for weight: $value")
+          sender() ! Text(senderId, weightMeasured(value))
+          userStorage.weightMeasured(value)
+          stay
+        case Failure(ex) =>
+          sender() ! Text(senderId, what) //TODO extract method say
+          goto(Serving) using Empty
+      }
+      case None =>
+        sender() ! Text(senderId, typeYourWeight)
+        goto(GettingWeight)
+    }
+
+    //blah-blah
+    case Event(UserSaid(text), _) =>
+      //TODO master, use your commands, you can measure your stuff
+      goto(Serving) using Empty
   }
 
   when(ConfirmingSmoke) {
@@ -113,25 +131,32 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
     case Event(UserSaid(text), _) if Recognizer.no(text) =>
       goto(Serving) using No
     case _ =>
-      goto(Serving) using What
+      sender() ! Text(senderId, what)
+      goto(Serving) using Empty
   }
 
   when(GettingWeight) {
-    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
-      goto(Serving) using Yes
-    case Event(UserSaid(text), _) if Recognizer.no(text) =>
-      goto(Serving) using No
-    case _ =>
-      goto(Serving) using What
+    case Event(UserSaid(text), _) => Try {text.toDouble} match {
+      case Success (value) =>
+        //TODO joke about master getting too much weight
+        logger.info(s"GettingWeight: Parsed value for weight: $value")
+        userStorage.weightMeasured(value)
+        sender() ! Text(senderId, weightMeasured(value))
+        goto (Serving) using Empty
+      case Failure(ex) =>
+        sender() ! Text(senderId, what) //TODO joke about master being ashamed
+        goto(Serving) using Empty
+    }
   }
 
   when(ConfirmingWeight) {
-    case Event(UserSaid(text), _) if Recognizer.yes(text) =>
+    case Event(UserSaid(text), UserMeasuredWeight(value)) if Recognizer.yes(text) =>
       goto(Serving) using Yes
     case Event(UserSaid(text), _) if Recognizer.no(text) =>
       goto(Serving) using No
     case _ =>
-      goto(Serving) using What
+      sender() ! Text(senderId, what)
+      goto(Serving) using Empty
   }
 
   when(ChangingLocale) {
@@ -140,7 +165,8 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
     case Event(UserSaid(text), _) if Recognizer.russian(text) =>
       goto(Serving) using UserChangedLocale(Russian)
     case _ =>
-      goto(Serving) using What
+      sender() ! Text(senderId, what)
+      goto(Serving) using Empty
   }
 
   onTransition {
@@ -157,12 +183,15 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
           userStorage.smoked(count)
           sender() ! Text(senderId, youSmokeConfirmed(count))
         }
-        case _ => sender() ! Text(senderId, what)
+        case _ => sender() ! Text(senderId, what) //TODO match any incoming to Serving using What
       }
       case _ => sender() ! Text(senderId, cancelled)
     }
+
+
     //------------------------------ Locale ------------------------------
     case Serving -> ChangingLocale =>
+        //TODO move to transition
         sender() ! Keyboard(senderId, changeLocale, Array(englishRussian))
 
     case ChangingLocale -> Serving => nextStateData match {
