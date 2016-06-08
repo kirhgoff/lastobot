@@ -45,7 +45,7 @@ class LastobotTest(_system: ActorSystem) extends TestKit(_system) with ImplicitS
       userStorage.smokedOverall() should equal(0)
 
       bot ! Smoke(None)
-
+      expectMsgType[Text] //how many cigarettes
       assertState(GettingSmoked, Empty)
 
       bot ! UserSaid("24")
