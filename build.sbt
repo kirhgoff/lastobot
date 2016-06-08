@@ -32,6 +32,9 @@ libraryDependencies ++= Seq(
   // Charts
   "org.knowm.xchart" % "xchart" % "3.0.4",
 
+  //Mail
+  "javax.mail" % "mail" % "1.4.7",
+
   "info.mukel" %% "telegrambot4s" % "1.0.3-SNAPSHOT"
   //"info.mukel" %% "telegrambot4s" % "1.1.4-SNAPSHOT"
 )
