@@ -2,8 +2,10 @@
 
 Playground for telegram bot
 
+Project Trello: [https://trello.com/b/tthaiPG8/lastobot]
+
 -------------------
-lastobot
+lastobot commands
 -------------------
 smoke - Ask bot to remember that you smoked xx cigarettes recently
 smokestats - Ask bot to print statistics for your smoking habit

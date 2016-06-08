@@ -150,7 +150,7 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
         //TODO joke about master getting too much weight
         logger.info(s"GettingSmoked: Parsed value for smokes: $value")
         userStorage.smoked(value)
-        sender() ! Text(senderId, youSmoked(value))
+        sender() ! Text(senderId, youSmoked(value)) //TODO print overall today
         goto (Serving) using Empty
       case Failure(ex) =>
         sender() ! Text(senderId, what) //TODO joke about master being ashamed
