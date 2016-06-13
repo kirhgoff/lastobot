@@ -33,7 +33,7 @@ object ChartTest extends {
     val dots = (for (x <- 1 to 5; y = random.nextInt(30))
       yield (x.toDouble, y.toDouble)).toList
 
-    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(dots)
+    val chart: XYChart = ChartsBuilder.monthlyCigarettesChart("be", dots)
     BitmapEncoder.saveBitmap(chart, "/tmp/chart", BitmapFormat.PNG)
   }
 
@@ -52,25 +52,27 @@ object ChartsBuilder {
 
   implicit def stringListToJavaStringList(list: List[String]): util.List[String] = list.asJava
 
-  def monthlyFile(data: List[(Long, Double)]): String = {
+  def monthlyFile(title:String, data: List[(Long, Double)]): String = {
     val filePath = createTempFile
     val chart: XYChart = ChartsBuilder.monthlyCigarettesChart(
+      title,
       data.map {case (x, y) => (x.toDouble, y)}
     )
     BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
     filePath + ".png"
   }
 
-  def weeklyFile(data: List[(Long, Double)]): String = {
+  def weeklyFile(title:String, data: List[(Long, Double)]): String = {
     val filePath = createTempFile
     val chart: CategoryChart = ChartsBuilder.weeklyCigarettesChart(
+      title,
       data.map {case (x, y) => (x.toDouble, y)}
     )
     BitmapEncoder.saveBitmap(chart, filePath, BitmapFormat.PNG)
     filePath + ".png"
   }
 
-  def monthlyCigarettesChart(dots:List[(Double, Double)]): XYChart = {
+  def monthlyCigarettesChart(title:String, dots:List[(Double, Double)]): XYChart = {
     val (days: List[Double], values: List[Double]) = dots.unzip
 
     val chart = new XYChartBuilder()
@@ -78,7 +80,7 @@ object ChartsBuilder {
       .height(MONTHLY_HEIGHT)
       .title("Month results")
       .xAxisTitle("Days before")
-      .yAxisTitle("Cigarettes")
+      .yAxisTitle(title)
       .theme(org.knowm.xchart.style.Styler.ChartTheme.GGPlot2)
       .build()
 
@@ -105,7 +107,7 @@ object ChartsBuilder {
     chart
   }
 
-  def weeklyCigarettesChart(dots:List[(Double, Double)]): CategoryChart = {
+  def weeklyCigarettesChart(title:String, dots:List[(Double, Double)]): CategoryChart = {
       val (days: List[String], values: List[Double]) = dots.map {
         case (x, y) => ( {
           val date = LocalDate.ofEpochDay(x.toInt)
@@ -120,7 +122,7 @@ object ChartsBuilder {
       .height(WEEKLY_HEIGHT)
       .title("Week results")
       .xAxisTitle("Days")
-      .yAxisTitle("Cigarettes")
+      .yAxisTitle(title)
       .theme(org.knowm.xchart.style.Styler.ChartTheme.GGPlot2)
       .build()
 

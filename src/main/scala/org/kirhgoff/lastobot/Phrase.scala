@@ -28,17 +28,22 @@ object BotLocale extends LazyLogging {
 }
 
 object Recognizer {
+
   //TODO use regexps
   def russian(text: String) = text.startsWith("Русский") || text.startsWith("русский")
   def english(text: String) = text.startsWith("English") || text.startsWith("english")
 
   def yes (text:String) = text.startsWith("да") || text.startsWith("yes")
   def no(text:String) = text.startsWith("нет") || text.startsWith("no")
+
+  def finished(text: String) = text.equalsIgnoreCase("готово") || text.equalsIgnoreCase("sumbit")
+
 }
 
 //TODO refactor locale match to partial function
 
 object Phrase {
+
 
   val random = new Random
 
@@ -136,6 +141,11 @@ object Phrase {
     russian("Отменяю")
   )
 
+  def cigarettes(implicit locale: BotLocale): String = compose (
+    russian("Сигарет"),
+    english("Cigarettes")
+  )
+
   def howManyCigarettes(implicit locale: BotLocale): String = compose (
     russian(anyOf(
       s"Хозяин, сколько сигарет вы выкурили?",
@@ -172,6 +182,11 @@ object Phrase {
     russian(s"Хозяин, данных пока нет.")
   )
 
+  def weight(implicit locale: BotLocale): String = compose (
+    russian("Вес"),
+    english("Weight")
+  )
+
   def weightMeasured(value: Double)(implicit locale: BotLocale): String = compose(
     english(anyOf(
       s"Saving your weight, master - $value kilos",
@@ -196,6 +211,18 @@ object Phrase {
       s"Ваш текущий вес, хозяин?"
     ))
   )
+
+  def whenFinishedTypeSubmit(implicit locale: BotLocale): String = compose(
+    english(anyOf(
+      s"Listening master, my engineers will be working day and night to implement this! Type 'sumbit' to finish it.",
+      s"Master, my guys will do their best to do this, write 'submit' when you finished as a separate command."
+    )),
+    russian(anyOf(
+      s"Хозяин, команда разработчиков будет работать над вашим предложением! Напишите 'готово', когда закончите",
+      s"Слушаю, хозяин, напишите 'готово', как закончите."
+    ))
+  )
+
 
   def confirmWeight(value: Double)(implicit locale: BotLocale): String = compose(
     english(anyOf(

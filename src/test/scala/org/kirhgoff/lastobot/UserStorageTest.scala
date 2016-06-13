@@ -30,7 +30,7 @@ class UserStorageTest  extends Matchers with FreeSpecLike  with BeforeAndAfterAl
       )
       val checkDate = LocalDate.of(2016, 5, 18)
       val epochDate = checkDate.toEpochDay
-      userStorage.aggregatedByDateBefore(checkDate) should equal(List(
+      userStorage.smokesAggregatedByDateBefore(checkDate) should equal(List(
         (epochDate + 1, 1d),
         (epochDate, 2d)
       ))

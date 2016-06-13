@@ -27,6 +27,8 @@ object BotAction {
   final case class Weight(weight:Option[String]) extends BotAction
   final case class ShowWeightStats() extends BotAction
   final case class Reset() extends BotAction
+  final case class Bug() extends BotAction
+  final case class Feature() extends BotAction
 }
 
 //What it sends back
@@ -50,6 +52,7 @@ case object Serving extends State
 case object GettingSmoked extends State
 case object GettingWeight extends State
 case object ConfirmingWeight extends State
+case object GettingUserFeedback extends State
 case object ChangingLocale extends State
 
 //data
@@ -58,10 +61,14 @@ case object Empty extends Data
 case object Yes extends Data
 case object No extends Data
 final case class UserSaid(text:String) extends Data
+final case class UserWish(wishType:BugOrFeature, text:String) extends Data
 final case class UserSmoked(count:Int) extends Data
 final case class UserMeasuredWeight(weight:Double) extends Data
 final case class UserChangedLocale(locale:BotLocale) extends Data
 
+trait BugOrFeature
+case object Bug extends BugOrFeature
+case object Feature extends BugOrFeature
 
 /**
   * Created by kirilllastovirya on 26/04/2016.
@@ -107,14 +114,14 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
 
     case Event(BotAction.ShowSmokingStats, _) => {
       logger.info("Showing smoking stats")
-      userStorage.aggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
+      userStorage.smokesAggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
         case data: List[(Long, Double)] if data.nonEmpty => {
 
-          sender() ! Picture(senderId, ChartsBuilder.monthlyFile(data))
-          sender() ! Picture(senderId, ChartsBuilder.weeklyFile(data.takeRight(7)))
+          sender() ! Picture(senderId, ChartsBuilder.monthlyFile(Phrase.cigarettes, data))
+          sender() ! Picture(senderId, ChartsBuilder.weeklyFile(Phrase.cigarettes, data.takeRight(7)))
         }
         case x => {
-          logger.info (s"Got this:$x")
+          logger.info (s"Trying to get smoking stats, got this:$x")
           sender() ! Text(senderId, noDataYet)
         }
       }
@@ -137,6 +144,28 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
         sender() ! Text(senderId, typeYourWeight)
         goto(GettingWeight)
     }
+    case Event(BotAction.ShowWeightStats, _) => {
+      logger.info("Showing weight stats")
+      userStorage.weightAggregatedByDateBefore(LocalDate.now.minusDays(30)) match {
+        case data: List[(Long, Double)] if data.nonEmpty => {
+
+          sender() ! Picture(senderId, ChartsBuilder.monthlyFile(Phrase.weight, data))
+          sender() ! Picture(senderId, ChartsBuilder.weeklyFile(Phrase.weight, data.takeRight(7)))
+        }
+        case x => {
+          logger.info (s"Trying to get smoking stats, got this:$x")
+          sender() ! Text(senderId, noDataYet)
+        }
+      }
+      stay
+    }
+    case Event(BotAction.Bug, _) =>
+      sender() ! Text(senderId, whenFinishedTypeSubmit)
+      goto(GettingUserFeedback) using UserWish(Bug, "Bug: ")
+
+    case Event(BotAction.Feature, _) =>
+      sender() ! Text(senderId, whenFinishedTypeSubmit)
+      goto(GettingUserFeedback) using UserWish(Feature, "Feature: ")
 
     //blah-blah
     case Event(UserSaid(text), _) =>
@@ -183,6 +212,14 @@ class SmokeBot(val senderId: Int, val userStorage: UserStorage)
       logger.error(s"wrong state ChangingLocale -> Serving: $other")
       sender() ! Text(senderId, what)
       goto(Serving) using Empty
+  }
+
+  when(GettingUserFeedback) {
+    case Event(UserSaid(text), UserWish(kind, body)) if Recognizer.finished(text) =>
+      Mailer.sendMail(s"${kind.toString.toUpperCase}: feedback from $senderId", body)
+      goto(Serving) using Empty
+    case Event(UserSaid(text), UserWish(kind, body)) =>
+      stay using UserWish(kind, body ++ "\n" ++ text)
   }
 
 //  onTransition {

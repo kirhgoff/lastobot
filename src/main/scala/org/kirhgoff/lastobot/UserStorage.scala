@@ -32,7 +32,6 @@ object DateConversions {
 
 //TODO Implement actor to perform db actions
 class UserStorage(val db:MongoDB) extends LazyLogging {
-
   import DateConversions._
 
   // Locale collection
@@ -71,6 +70,37 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
     }
   }
 
+  /*
+  db.weights.aggregate([{$match : {"epochDay" : {$gte : 16939}}}, {$group: {_id:"$epochDay", "total":{$avg:"$weight"}}}, {$sort : {"_id": -1}}])
+   */
+  def weightAggregatedByDateBefore(date: LocalDate): List[(Long, Double)] = {
+    val total = weights.aggregate(List(
+      MongoDBObject("$match" ->
+        MongoDBObject("epochDay" -> MongoDBObject("$gte" -> date.toEpochDay))
+      ),
+      MongoDBObject("$group" ->
+        MongoDBObject(
+          "_id" -> "$epochDay",
+          "total" -> MongoDBObject("$avg" -> "$weight") //TODO refactor me
+        )
+      ),
+      MongoDBObject("$sort" ->
+        MongoDBObject("_id" -> -1)
+      )
+    ))
+    val seq = for (result <- total.results) yield (
+      result("_id").asInstanceOf[Long],
+      result("total") match {
+        //TODO what to do with this?
+        case i:Number => i.doubleValue()
+        //case d:Double => d
+      }
+      )
+    seq.toList
+  }
+
+
+
   // Smokes collection
   val smokes = db("smokes")
 
@@ -91,15 +121,15 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
     }
   }
 
-  def aggregatedByDateBefore(localDate: LocalDate):List [(Long, Double)] = {
-    val total = smokes.aggregate(List(
+  def smokesAggregatedByDateBefore(localDate: LocalDate):List [(Long, Double)] = {
+    val total = weights.aggregate(List(
       MongoDBObject("$match" ->
         MongoDBObject("epochDay" -> MongoDBObject("$gte" -> localDate.toEpochDay))
       ),
       MongoDBObject("$group" ->
         MongoDBObject(
           "_id" -> "$epochDay",
-          "total" -> MongoDBObject("$sum" -> "$count")
+          "total" -> MongoDBObject("$sum" -> "$count") //TODO refactor me
         )
       ),
       MongoDBObject("$sort" ->
@@ -110,7 +140,7 @@ class UserStorage(val db:MongoDB) extends LazyLogging {
       result("_id").asInstanceOf[Long],
       result("total") match {
         //TODO what to do with this?
-        case i:Integer => i.doubleValue()
+        case i:Number => i.doubleValue()
       }
     )
     seq.toList
@@ -128,8 +158,16 @@ object MongoTest {
   def main(args: Array[String]): Unit = {
     val mongoClient = MongoClient("localhost", 27017)
     val db = mongoClient("sender_3")
+
     val userStorage = new UserStorage(db)
-    val results = userStorage.aggregatedByDateBefore(LocalDate.of(2016, 5, 18))
-    println(results)
+    val date: LocalDate = LocalDate.of(2016, 5, 17)
+
+    userStorage.weightMeasured(10, date)
+    userStorage.weightMeasured(20, date.plusDays(1))
+    userStorage.weightMeasured(30, date.plusDays(2))
+
+    val newDate: LocalDate = date
+    val data: List[(Long, Double)] = userStorage.weightAggregatedByDateBefore(newDate)
+    println(ChartsBuilder.weeklyFile("b",data))
   }
 }

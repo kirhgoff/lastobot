@@ -30,6 +30,8 @@ class UserRouter(val bot:TelegramBot) extends Actor with LazyLogging {
       case "weightstats" => userActor (sender) ! ShowWeightStats
       case "start" => userActor (sender) ! Start
       case "setlocale" => userActor (sender) ! ChangeLocale
+      case "bug" => userActor (sender) ! Bug
+
       case any => logger.error(s"Unknown command $any")
     }
 
